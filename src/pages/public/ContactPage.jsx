@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import Button from "../../components/ui/Button";
 import LinesVectorBg from "../../assets/svg/linesvectorbg.svg";
 import GroupDiscussion from "../../assets/svg/group-discussion-rafiki.svg";
+import Input from "../../components/ui/Input";
 
 const fieldClass =
   "w-full px-4 py-3.5 bg-zinc-100 rounded-[10px] text-neutral-gray-9 text-base placeholder:text-neutral-gray-6 focus:outline-none focus:ring-2 focus:ring-primary/30 transition-shadow";
@@ -37,16 +38,16 @@ export default function ContactPage() {
             className="w-500 object-cover object-center"
           />
         </div>
-        <div className="relative section-container section-padding flex flex-col items-center text-center gap-7">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight">
+        <div className="relative mt-24 mb-18 md:mt-26 md:mb-20 lg:mt-30 lg:mb-24 section-container  flex flex-col items-center text-center gap-7">
+          <h1 className="text-4xl xsm:text-[40px] sm:text-5xl md:text-6xl lg:text-[68px] xl:text-7xl font-semibold leading-tight">
             <span className="text-secondary">Contact </span>
             <span className="text-primary">Us</span>
           </h1>
-          <p className="max-w-xl text-neutral-gray-8 text-sm md:text-lg leading-5 md:leading-6">
+          <p className="max-w-2xl text-neutral-gray-8 text-sm md:text-lg leading-5 md:leading-6">
             Something not working? Got an idea? Want to report an issue? Drop us
             a message and we&apos;ll get back to you.
           </p>
-        </div>
+        </div>      
       </section>
 
       {/* ── FORM ── */}
@@ -54,13 +55,12 @@ export default function ContactPage() {
         <div className="section-container section-padding">
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
             {/* Illustration */}
-            <div className="w-full lg:w-1/2 relative h-72 sm:h-96 md:h-[500px] lg:h-[650px] rounded-3xl overflow-hidden flex-shrink-0">
+            <div className="w-full lg:w-1/2 h-72 sm:h-96 md:h-[500px] lg:h-[650px] rounded-3xl overflow-hidden shrink-0">
               <img
                 src={GroupDiscussion}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover object-center"
+                className="w-full h-full object-cover object-center"
               />
-              <div className="absolute inset-0 bg-linear-to-t from-secondary/30 to-transparent" />
             </div>
 
             {/* Form */}
@@ -75,15 +75,16 @@ export default function ContactPage() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-                <input
-                  type="text"
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                <Input
+                  label="Name"
+                  id="name"
                   name="name"
                   placeholder="Name"
                   value={form.name}
                   onChange={handleChange}
-                  className={fieldClass}
                 />
+
                 <input
                   type="email"
                   name="email"

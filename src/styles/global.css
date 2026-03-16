@@ -9,6 +9,7 @@
 
   /* --- Breakpoints */
   --breakpoint-xsm: 530px;
+  --breakpoint-xlg: 930px;
 
   /* --- Main Colors --- */
   --color-primary: #191d72;
@@ -17,6 +18,7 @@
   --color-secondary: #202021;
   --color-tertiary: #ffffff;
   --color-tertiary-hover: #ededf8;
+  --color-section-bg: #fbfafc;
 
   /* --- Neutral Grays --- */
   --color-neutral-gray-1: #ffffff;
@@ -280,14 +282,13 @@
          transition-colors duration-200 cursor-pointer select-none;
   }
 
-  .flex-center{
+  .flex-center {
     @apply flex justify-center items-center;
   }
 
-
   /* --- Layout --- */
   .section-container {
-    @apply w-full max-w-[1392px] mx-auto px-5 md:px-8;
+    @apply w-full mx-auto px-5 md:px-10 xl:px-25 xl:mx-0;
   }
 
   .section-padding {
@@ -301,10 +302,8 @@
 
   /* --- Inputs --- */
   .input-base {
-    @apply w-full px-4 py-3 rounded-xl border border-neutral-gray-4 bg-white
-         text-[var(--font-size-text-base)] text-neutral-gray-10
-         placeholder:text-neutral-gray-6
-         focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
+    @apply w-full px-4 py-[13.5px] rounded-xl border-none bg-[#f4f4f4]
+         text-sm md:text-base text-secondary placeholder:text-neutral-gray-6 focus:outline-none focus:ring-2 focus:ring-primary/30
          transition-all duration-200;
   }
 }

@@ -1,17 +1,22 @@
 import { Icon } from "@iconify/react";
 
-export default function FeatureItem({ icon, title, desc }) {
+export default function FeatureItem({
+  icon,
+  title,
+  desc,
+  iconClass = "w-full h-full",
+}) {
   return (
-    <div className="relative pl-16 md:pl-20 pr-4 md:pr-16 py-10 md:py-12 flex flex-col gap-3.5">
-      <div className="absolute left-0 -top-2.5 w-14 h-14 md:w-20 md:h-20 rotate-[16deg] overflow-hidden">
-        <Icon icon={icon} className="w-full h-full text-neutral-gray-1" />
+    <div className="flex items-start px-4 xl:px-16 py-10 md:py-12 gap-3 md:gap-6 lg:gap-4">
+      <div className={`w-12 h-12 md:w-18 md:h-18 lg:w-24 lg:h-24 rotate-16 overflow-hidden -mt-7 md:-mt-10 shrink-0 lg:shrink`}>
+        <Icon icon={icon} className={`text-neutral-gray-1 ${iconClass}`} />
       </div>
-      <h3 className="text-neutral-gray-1 text-lg md:text-xl font-semibold leading-7 md:leading-8">
-        {title}
-      </h3>
-      <p className="text-blue-2 text-sm md:text-base leading-5">
-        {desc}
-      </p>
+      <div className=" flex flex-col gap-3.5">
+        <h3 className="text-neutral-gray-1 text-lg md:text-xl font-semibold leading-7 md:leading-8">
+          {title}
+        </h3>
+        <p className="text-blue-2 text-sm md:text-base leading-5 max-w-[560px]">{desc}</p>
+      </div>
     </div>
   );
 }

@@ -91,7 +91,7 @@ function PublicHeader({ onMobileToggle, mobileOpen }) {
             to={link.to}
             end={link.to === "/"}
             className={({ isActive }) =>
-              `relative text-base transition-colors duration-200
+              `relative text-base transition-colors duration-200 outline-none
                ${isActive ? "text-primary font-medium" : "text-neutral-gray-9 hover:text-primary"}`
             }
           >
@@ -392,7 +392,9 @@ export default function Header({ variant = "public", onSidebarToggle }) {
   }
 
   return (
-    <header className={`fixed top-0 z-40 w-full transition-all duration-300 ${scrolled ? "bg-neutral-gray-1 border-b border-neutral-gray-1 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.12)]" : "bg-transparent border-b border-transparent"}`}>
+    <header
+      className={`fixed top-0 z-40 w-full transition-all duration-300 ${scrolled ? "bg-neutral-gray-1 border-b border-neutral-gray-1 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.12)]" : "bg-transparent border-b border-transparent"}`}
+    >
       <div className="mx-auto px-5 md:px-8 xl:px-25 py-4">
         {variant === "public" && (
           <PublicHeader onMobileToggle={toggleMobile} mobileOpen={mobileOpen} />

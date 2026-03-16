@@ -30,7 +30,7 @@ const legalLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-neutral-gray-1 rounded-tl-[32px] rounded-tr-[32px] md:rounded-tl-[48px] md:rounded-tr-[48px] shadow-[0px_3px_2px_0px_rgba(0,0,0,0.17)] ring-1 ring-neutral-gray-3">
+    <footer className="relative z-10 bg-neutral-gray-1 -mt-8 md:-mt-12 rounded-t-4xl md:rounded-t-[48px] shadow-[0px_3px_2px_0px_rgba(0,0,0,0.17)] ring-1 ring-neutral-gray-3">
       <div className="section-container section-padding flex flex-col gap-11">
         <div className="flex flex-col lg:flex-row justify-between items-start gap-16">
           {/* Brand */}
