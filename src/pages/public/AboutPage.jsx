@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion, useInView } from "framer-motion";
 import { Icon } from "@iconify/react";
 import Button from "../../components/ui/Button";
 import SectionTitle from "../../components/common/SectionTitle";
@@ -193,6 +194,36 @@ const faqs = [
   },
 ];
 
+function StatCounter({ value, suffix, label, labelClass = "text-lg" }) {
+  const target = parseInt(value, 10)
+  const ref = useRef(null)
+  const isInView = useInView(ref, { once: true, margin: "-40px" })
+  const [count, setCount] = useState(0)
+
+  useEffect(() => {
+    if (!isInView) return
+    const duration = 1800
+    let start = null
+    const tick = (ts) => {
+      if (!start) start = ts
+      const p = Math.min((ts - start) / duration, 1)
+      setCount(Math.round((1 - Math.pow(1 - p, 3)) * target))
+      if (p < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [isInView, target])
+
+  return (
+    <>
+      <p ref={ref} className="text-5xl font-bold leading-[50px]">
+        <span className="text-primary">{count}</span>
+        <span className="text-blue-2">{suffix}</span>
+      </p>
+      <p className={`text-primary ${labelClass}`}>{label}</p>
+    </>
+  )
+}
+
 export default function AboutPage() {
   const navigate = useNavigate();
   const teamScrollRef = useRef(null);
@@ -237,7 +268,7 @@ export default function AboutPage() {
           <img
             src={LinesVectorBg}
             alt=""
-            className="w-500 object-cover object-center"
+            className="opacity-70 object-center object-cover w-200 h-200 md:w-300 md:h-300 lg:w-full lg:h-full"
           />
         </div>
         <div className="relative mt-24 mb-18 md:mt-26 md:mb-20 lg:mt-30 lg:mb-24 section-container  flex flex-col items-center text-center gap-7">
@@ -288,43 +319,31 @@ export default function AboutPage() {
                     key={stat.label}
                     className={`flex flex-col items-center gap-3.5 text-center w-full py-11 first:pt-0 last:pb-0 ${i > 0 ? "border-t border-neutral-gray-3" : ""}`}
                   >
-                    <p className="text-5xl font-bold leading-[50px]">
-                      <span className="text-primary">{stat.value}</span>
-                      <span className="text-blue-2">{stat.suffix}</span>
-                    </p>
-                    <p className="text-primary text-lg">{stat.label}</p>
+                    <StatCounter value={stat.value} suffix={stat.suffix} label={stat.label} labelClass="text-lg" />
                   </div>
                 ))}
               </div>
 
               {/* Desktop: 2×2 grid with cross dividers */}
               <div className="hidden lg:flex items-stretch gap-0">
-                <div className="flex flex-col items-center  ">
+                <div className="flex flex-col items-center">
                   {[stats[0], stats[2]].map((stat, i) => (
                     <div
                       key={stat.label}
                       className={`max-w-[250px] flex flex-col items-center gap-3.5 text-center w-full py-16 first:pt-0 last:pb-0 ${i > 0 ? "border-t border-neutral-gray-3 px-5" : "px-5"}`}
                     >
-                      <p className="text-5xl font-bold leading-[50px]">
-                        <span className="text-primary">{stat.value}</span>
-                        <span className="text-blue-2">{stat.suffix}</span>
-                      </p>
-                      <p className="text-primary text-xl">{stat.label}</p>
+                      <StatCounter value={stat.value} suffix={stat.suffix} label={stat.label} labelClass="text-xl" />
                     </div>
                   ))}
                 </div>
                 <div className="border-l border-neutral-gray-3" />
-                <div className="flex flex-col items-center ">
+                <div className="flex flex-col items-center">
                   {[stats[1], stats[3]].map((stat, i) => (
                     <div
                       key={stat.label}
                       className={`max-w-[250px] flex flex-col items-center gap-3.5 text-center w-full py-16 first:pt-0 last:pb-0 ${i > 0 ? "border-t border-neutral-gray-3 px-5" : "px-5"}`}
                     >
-                      <p className="text-5xl font-bold leading-[50px]">
-                        <span className="text-primary">{stat.value}</span>
-                        <span className="text-blue-2">{stat.suffix}</span>
-                      </p>
-                      <p className="text-primary text-xl">{stat.label}</p>
+                      <StatCounter value={stat.value} suffix={stat.suffix} label={stat.label} labelClass="text-xl" />
                     </div>
                   ))}
                 </div>
@@ -342,32 +361,31 @@ export default function AboutPage() {
             heading="Academic Communication Was Broken"
             subtext="Before NoticeHub, this is what staying informed looked like for CS and IT students every single day."
           />
-          <div className="w-full grid grid-cols-1 xlg:grid-cols-2 xl:grid-cols-3   gap-7">
-            <ProblemCard
-              number="01"
-              heading="Deadlines Slip Through the Cracks"
-              subtext="Without a central place for academic notices, critical assignment deadlines and exam updates get buried under unrelated messages. Students scroll endlessly through WhatsApp threads only to miss what matters most, and by the time they find it, it's too late. The frustrating part is that the information was always there. It was posted, it existed, someone shared it."
-              className="w-full max-w-none"
-            />
-            <ProblemCard
-              number="02"
-              heading="Lecturers Can't Reach Everyone"
-              subtext="Posting the same announcement across multiple platforms — WhatsApp, Telegram, email, and Drive — is exhausting and unreliable. There's no guarantee every student sees it, and no way to know who did. Important information falls through the gaps every single time. A WhatsApp group was never built for academic communication."
-              whiteCard
-              className="w-full max-w-none"
-            />
-            <ProblemCard
-              number="03"
-              heading="Course Reps Are Overwhelmed"
-              subtext="Managing communication for an entire class across fragmented channels is a full-time job. Course representatives spend more time chasing students and reposting notices than actually representing their peers. One platform should handle all of it. And now it does."
-              className="w-full max-w-none"
-            />
+          <div className="w-full grid grid-cols-1 xlg:grid-cols-2 xl:grid-cols-3 gap-7">
+            {[
+              { number: "01", heading: "Deadlines Slip Through the Cracks", subtext: "Without a central place for academic notices, critical assignment deadlines and exam updates get buried under unrelated messages. Students scroll endlessly through WhatsApp threads only to miss what matters most, and by the time they find it, it's too late. The frustrating part is that the information was always there. It was posted, it existed, someone shared it." },
+              { number: "02", heading: "Lecturers Can't Reach Everyone", subtext: "Posting the same announcement across multiple platforms — WhatsApp, Telegram, email, and Drive — is exhausting and unreliable. There's no guarantee every student sees it, and no way to know who did. Important information falls through the gaps every single time. A WhatsApp group was never built for academic communication.", whiteCard: true },
+              { number: "03", heading: "Course Reps Are Overwhelmed", subtext: "Managing communication for an entire class across fragmented channels is a full-time job. Course representatives spend more time chasing students and reposting notices than actually representing their peers. One platform should handle all of it. And now it does." },
+            ].map((card, i) => (
+              <motion.div
+                key={card.number}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 0.61, 0.36, 1] }}
+              >
+                <ProblemCard {...card} className="w-full max-w-none h-full" />
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ── OUR SOLUTION ── */}
-      <section className="bg-linear-to-b from-[#0E0E6A] to-[#070732]">
+      <section
+        id="our-solution"
+        className="bg-linear-to-b from-[#0E0E6A] to-[#070732]"
+      >
         <div className="section-container section-padding flex flex-col items-center gap-16 md:gap-20">
           <SectionTitle
             tag="Our Solution"
@@ -419,9 +437,13 @@ export default function AboutPage() {
           />
           <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 items-end md:items-end gap-16 md:gap-6 lg:gap-10">
             {roadmapPhases.map((phase, idx) => (
-              <div
+              <motion.div
                 key={phase.title}
                 className="flex flex-col items-center gap-3.5 md:gap-4 text-center"
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: idx * 0.15, ease: [0.22, 0.61, 0.36, 1] }}
               >
                 <div
                   className={`${idx == 1 ? "w-22.5 h-22.5" : "w-17.5 h-17.5"}  rounded-full ${phase.iconBg} ring-[10px] ${phase.iconRing} flex items-center justify-center text-white`}
@@ -452,7 +474,7 @@ export default function AboutPage() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -510,7 +532,7 @@ export default function AboutPage() {
                 <Icon
                   icon="akar-icons:chevron-left"
                   width={24}
-                  className={`w-4.5 lg:w-6 ${canScrollLeft ? "text-primary group-hover:text-blue-1" : "text-neutral-gray-4"}`}
+                  className={`w-5.5 sm:w-6 ${canScrollLeft ? "text-primary group-hover:text-blue-1" : "text-neutral-gray-4"}`}
                 />
               </button>
               <button
@@ -524,8 +546,8 @@ export default function AboutPage() {
               >
                 <Icon
                   icon="akar-icons:chevron-right"
-                  width={24}
-                  className={`${canScrollRight ? "text-primary group-hover:text-blue-1" : "text-neutral-gray-4"}`}
+                    width={24}
+                  className={`w-5.5 sm:w-6 ${canScrollRight ? "text-primary group-hover:text-blue-1" : "text-neutral-gray-4"}`}
                 />
               </button>
             </div>
@@ -534,13 +556,12 @@ export default function AboutPage() {
       </section>
 
       {/* ── FAQ ── */}
-      <section className="bg-linear-to-b from-[#0E0E6A] to-[#070732]">
+      <section className="bg-section-bg">
         <div className="section-container section-padding flex flex-col items-center gap-16 md:gap-20">
           <SectionTitle
             tag="FAQ"
             heading="Everything You Need To Know"
             subtext="If your question is not answered here, reach out to your course rep or department admin"
-            onColor
           />
           <div className="w-full max-w-4xl mx-auto flex flex-col gap-4 md:gap-6">
             {faqs.map((faq, i) => (

@@ -35,7 +35,7 @@ export default function ContactPage() {
           <img
             src={LinesVectorBg}
             alt=""
-            className="w-500 object-cover object-center"
+            className="opacity-70 object-center object-cover w-200 h-200 md:w-300 md:h-300 lg:w-full lg:h-full"
           />
         </div>
         <div className="relative mt-24 mb-18 md:mt-26 md:mb-20 lg:mt-30 lg:mb-24 section-container  flex flex-col items-center text-center gap-7">
@@ -47,7 +47,7 @@ export default function ContactPage() {
             Something not working? Got an idea? Want to report an issue? Drop us
             a message and we&apos;ll get back to you.
           </p>
-        </div>      
+        </div>
       </section>
 
       {/* ── FORM ── */}
@@ -64,9 +64,9 @@ export default function ContactPage() {
             </div>
 
             {/* Form */}
-            <div className="w-full lg:w-1/2 flex flex-col gap-9">
+            <div className="w-full max-w-[768px] lg:w-1/2 flex flex-col gap-9">
               <div className="flex flex-col gap-4">
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-secondary">
+                <h2 className="text-2xl md:text-3xl lg:text-[32px] font-bold text-secondary">
                   Speak Up — Your Voice Matters
                 </h2>
                 <p className="text-neutral-gray-8 text-sm md:text-lg leading-6 md:leading-8 max-w-lg">
@@ -77,7 +77,6 @@ export default function ContactPage() {
 
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <Input
-                  label="Name"
                   id="name"
                   name="name"
                   placeholder="Name"
@@ -85,17 +84,17 @@ export default function ContactPage() {
                   onChange={handleChange}
                 />
 
-                <input
-                  type="email"
+                <Input
+                  id="email"
                   name="email"
+                  type="email"
                   placeholder="Email Address"
                   value={form.email}
                   onChange={handleChange}
-                  className={fieldClass}
                 />
 
                 {/* Program + Level */}
-                <div className="flex gap-4 sm:gap-6">
+                <div className="flex flex-col md:flex-row gap-5">
                   <div className="relative flex-1">
                     <select
                       name="program"
@@ -173,14 +172,12 @@ export default function ContactPage() {
                     width={16}
                   />
                 </div>
-
-                <input
-                  type="text"
+                <Input
+                  id="subject"
                   name="subject"
                   placeholder="Subject"
                   value={form.subject}
                   onChange={handleChange}
-                  className={fieldClass}
                 />
                 <textarea
                   name="message"
@@ -188,7 +185,7 @@ export default function ContactPage() {
                   value={form.message}
                   onChange={handleChange}
                   rows={4}
-                  className={`${fieldClass} resize-none`}
+                  className={`input-base resize-none`}
                 />
 
                 <div>

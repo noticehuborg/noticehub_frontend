@@ -1,111 +1,331 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import Modal from '../../components/ui/Modal'
-import Input from '../../components/ui/Input'
-import Button from '../../components/ui/Button'
-import { useAuth } from '../../hooks/useAuth'
+import { useState } from "react";
+import { Icon } from "@iconify/react";
+import Modal from "../../components/ui/Modal";
+import Input from "../../components/ui/Input";
+import Button from "../../components/ui/Button";
+import { useModal, MODAL } from "../../context/ModalContext";
+import logo from "../../assets/img/logo.png";
+
+const programs = [
+  { value: "cs", label: "Computer Science" },
+  { value: "it", label: "Information Technology" },
+];
+const levels = [
+  { value: "100", label: "Level 100" },
+  { value: "200", label: "Level 200" },
+  { value: "300", label: "Level 300" },
+  { value: "400", label: "Level 400" },
+];
 
 export default function RegisterModal() {
-  const navigate = useNavigate()
-  const { status } = useAuth()
-  const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' })
-  const [errors, setErrors] = useState({})
+  const { closeModal, openModal } = useModal();
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm: "",
+    program: "",
+    level: "",
+  });
+  const [agreed, setAgreed] = useState(false);
+  const [errors, setErrors] = useState({});
 
   function handleChange(e) {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
-    setErrors((e2) => ({ ...e2, [e.target.name]: '' }))
+    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setErrors((e2) => ({ ...e2, [e.target.name]: "" }));
   }
 
   function validate() {
-    const errs = {}
-    if (!form.name.trim()) errs.name = 'Name is required.'
-    if (!form.email.trim()) errs.email = 'Email is required.'
-    if (form.password.length < 8) errs.password = 'Password must be at least 8 characters.'
-    if (form.password !== form.confirm) errs.confirm = 'Passwords do not match.'
-    return errs
+    const errs = {};
+    if (!form.name.trim()) errs.name = "Name is required.";
+    if (!form.email.trim()) errs.email = "Email is required.";
+    if (form.password.length < 8) errs.password = "At least 8 characters.";
+    if (form.password !== form.confirm)
+      errs.confirm = "Passwords do not match.";
+    if (!form.program) errs.program = "Select a program.";
+    if (!form.level) errs.level = "Select a level.";
+    if (!agreed) errs.terms = "You must agree to the terms.";
+    return errs;
   }
 
   function handleSubmit(e) {
-    e.preventDefault()
-    const errs = validate()
-    if (Object.keys(errs).length) { setErrors(errs); return }
-    // Navigate to OTP step (mock — in real app, trigger OTP send here)
-    navigate('/verify')
+    e.preventDefault();
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
+    openModal(MODAL.OTP, {
+      email: form.email,
+      name: form.name,
+      password: form.password,
+      program: form.program,
+      level: form.level,
+    });
   }
 
   return (
-    <Modal onClose={() => navigate('/')} className="max-w-lg mx-auto">
-      <div className="p-8 flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <h2 className="text-mobile-h4 font-bold text-neutral-gray-10">Create your account</h2>
-          <p className="text-[var(--font-size-text-sm)] text-neutral-gray-6">
-            Join thousands of students on NoticeHub
-          </p>
+    <Modal
+      onClose={closeModal}
+      portalClassName="p-0! items-end md:items-center md:p-6!"
+      className="max-w-270 h-[min(700px,85vh)] overflow-hidden rounded-none rounded-t-[20px]! md:rounded-[20px]"
+    >
+      <div className="flex flex-col md:flex-row h-full">
+        {/* Desktop left brand panel */}
+        <div className="relative h-full hidden md:flex w-[47%] shrink-0 flex-col gap-8 px-5 py-8 lg:px-6 lg:py-8 bg-linear-to-b from-primary to-[#6366F1] rounded-2xl">
+          <div className="flex flex-col gap-3">
+            <h2 className="text-white text-2xl lg:text-3xl font-bold leading-tight">
+              Join NoticeHub
+            </h2>
+            <p className="text-indigo-100 text-[15px] lg:text-base leading-normal">
+              Create your account and never miss an important announcement
+              again.
+            </p>
+          </div>
+          <div className="p-4 lg:p-5 bg-white/10 rounded-2xl flex flex-col gap-5">
+            {[
+              {
+                icon: "qlementine-icons:newspaper-16",
+                title: "Personalized Feed",
+                desc: "See only what matters to your level and program.",
+              },
+              {
+                icon: "iconoir:bell",
+                title: "Real-time Alerts",
+                desc: "Get notified instantly about new announcements.",
+              },
+              {
+                icon: "mdi:calendar-check-outline",
+                title: "Never Miss Deadlines",
+                desc: "Track all your deadlines in one place.",
+              },
+            ].map((f) => (
+              <div key={f.title} className="flex items-start gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center shrink-0 mt-0.5">
+                  <Icon icon={f.icon} width={20} className="text-white" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <p className="text-white text-sm xl:text-base font-medium leading-6 tracking-wide">
+                    {f.title}
+                  </p>
+                  <p className="text-indigo-100 text-xs xl:text-sm leading-normal">
+                    {f.desc}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="absolute -left-20 -bottom-28 rotate-[20deg] opacity-10 pointer-events-none">
+            <img
+              src={logo}
+              alt="NoticeHub Logo"
+              className="w-64 h-64 brightness-0 invert"
+            />
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            label="Full name"
-            id="reg-name"
-            name="name"
-            placeholder="Your full name"
-            value={form.name}
-            onChange={handleChange}
-            error={errors.name}
-            autoComplete="name"
-          />
-          <Input
-            label="Email address"
-            id="reg-email"
-            name="email"
-            type="email"
-            placeholder="you@university.edu"
-            value={form.email}
-            onChange={handleChange}
-            error={errors.email}
-            autoComplete="email"
-          />
-          <Input
-            label="Password"
-            id="reg-password"
-            name="password"
-            type="password"
-            placeholder="At least 8 characters"
-            value={form.password}
-            onChange={handleChange}
-            error={errors.password}
-            autoComplete="new-password"
-          />
-          <Input
-            label="Confirm password"
-            id="reg-confirm"
-            name="confirm"
-            type="password"
-            placeholder="Repeat your password"
-            value={form.confirm}
-            onChange={handleChange}
-            error={errors.confirm}
-            autoComplete="new-password"
-          />
+        {/* Right panel — form is the flex column so footer sticks naturally */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex-1 flex flex-col gap-4.5 overflow-hidden py-0 md:px-6 md:pt-6 lg:px-10"
+        >
+          {/* Scrollable area — includes banner + heading + inputs */}
+          <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-3">
+            <div className="flex flex-col gap-4 pt-1 md:pt-0">
+              {/* Mobile gradient banner */}
+              <div className="md:hidden px-5 py-7 bg-linear-to-b from-primary to-indigo-500 rounded-2xl relative overflow-hidden">
+                <div className="flex flex-col gap-3 relative z-10">
+                  <h2 className="text-white text-xl font-bold">
+                    Join NoticeHub
+                  </h2>
+                  <p className="text-indigo-50 text-sm leading-5 max-w-64">
+                    Create your account and never miss an important announcement
+                    again.
+                  </p>
+                </div>
+                <div className="absolute -right-10 -top-10 rotate-[-120deg] opacity-10 pointer-events-none">
+                  <img
+                    src={logo}
+                    alt="NoticeHub Logo"
+                    className="w-28 h-28 brightness-0 invert"
+                  />
+                </div>
+              </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            loading={status === 'loading'}
-            className="w-full mt-1"
-          >
-            Create account
-          </Button>
+              <div>
+                <h2 className="text-secondary text-xl md:text-2xl lg:text-3xl font-bold">
+                  Create Account
+                </h2>
+                <p className="text-neutral-gray-8 text-sm md:text-base mt-1">
+                  Fill in your details to get started
+                </p>
+              </div>
+              <Input
+                label="Full Name"
+                id="reg-name"
+                name="name"
+                placeholder="Enter your full name"
+                value={form.name}
+                onChange={handleChange}
+                error={errors.name}
+                autoComplete="name"
+              />
+              <Input
+                label="Email Address"
+                id="reg-email"
+                name="email"
+                type="email"
+                placeholder="Enter your email"
+                value={form.email}
+                onChange={handleChange}
+                error={errors.email}
+                autoComplete="email"
+              />
+              <Input
+                label="Password"
+                id="reg-password"
+                name="password"
+                type="password"
+                placeholder="At least 8 characters"
+                value={form.password}
+                onChange={handleChange}
+                error={errors.password}
+                autoComplete="new-password"
+              />
+              <Input
+                label="Confirm Password"
+                id="reg-confirm"
+                name="confirm"
+                type="password"
+                placeholder="Repeat your password"
+                value={form.confirm}
+                onChange={handleChange}
+                error={errors.confirm}
+                autoComplete="new-password"
+              />
+              <div className="flex flex-col xsm:flex-row md:flex-col lg:flex-row gap-4">
+                <SelectField
+                  id="reg-program"
+                  name="program"
+                  label="Program"
+                  placeholder="Select program"
+                  value={form.program}
+                  onChange={handleChange}
+                  options={programs}
+                  error={errors.program}
+                />
+                <SelectField
+                  id="reg-level"
+                  name="level"
+                  label="Level"
+                  placeholder="Select level"
+                  value={form.level}
+                  onChange={handleChange}
+                  options={levels}
+                  error={errors.level}
+                />
+              </div>
+              {/* Checkbox — label wraps everything so clicking any text toggles it */}
+              <label className="flex items-start gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="w-4 h-4 mt-0.5 rounded border-slate-200 accent-primary shrink-0"
+                />
+                <span className="text-sm text-secondary">
+                  I agree to the{" "}
+                  <span
+                    onClick={(e) => e.preventDefault()}
+                    className="text-primary hover:underline cursor-pointer"
+                  >
+                    Terms of Service
+                  </span>{" "}
+                  and{" "}
+                  <span
+                    onClick={(e) => e.preventDefault()}
+                    className="text-primary hover:underline cursor-pointer"
+                  >
+                    Privacy Policy
+                  </span>
+                </span>
+              </label>
+              {errors.terms && (
+                <p className="text-sm text-error-7 mb-1">{errors.terms}</p>
+              )}
+            </div>
+          </div>
+
+          {/* Sticky footer */}
+          <div className="relative shrink-0 sm:pt-2 bg-white">
+            <div className="absolute -top-12 inset-x-0 h-8 bg-linear-to-t from-white to-transparent pointer-events-none z-10" />
+            <div className="flex flex-col gap-3">
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                className="w-full text-[15px] xsm:text-base! py-2.5!"
+              >
+                Create Account
+              </Button>
+              <p className="text-center text-sm text-neutral-gray-8">
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => openModal(MODAL.LOGIN)}
+                  className="text-primary hover:underline"
+                >
+                  Login
+                </button>
+              </p>
+            </div>
+          </div>
         </form>
-
-        <p className="text-center text-[var(--font-size-text-sm)] text-neutral-gray-6">
-          Already have an account?{' '}
-          <Link to="/login" className="text-primary font-medium hover:underline">
-            Sign in
-          </Link>
-        </p>
       </div>
     </Modal>
-  )
+  );
+}
+
+function SelectField({
+  id,
+  name,
+  label,
+  placeholder,
+  value,
+  onChange,
+  options,
+  error,
+}) {
+  return (
+    <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+      <label htmlFor={id} className="text-sm font-medium text-neutral-gray-9">
+        {label}
+      </label>
+      <div className="relative">
+        <select
+          id={id}
+          name={name}
+          value={value}
+          onChange={onChange}
+          className={`input-base appearance-none pr-8 ${error ? "ring-1 ring-error-7" : ""}`}
+        >
+          <option value="" disabled>
+            {placeholder}
+          </option>
+          {options.map((o) => (
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
+          ))}
+        </select>
+        <Icon
+          icon="mdi:chevron-down"
+          width={16}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-gray-6 pointer-events-none"
+        />
+      </div>
+      {error && <p className="text-xs text-error-7">{error}</p>}
+    </div>
+  );
 }

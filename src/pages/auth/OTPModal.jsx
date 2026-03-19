@@ -1,66 +1,101 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Icon } from '@iconify/react'
 import Modal from '../../components/ui/Modal'
 import OTPInput from '../../components/ui/OTPInput'
-import Button from '../../components/ui/Button'
+import { useAuth } from '../../hooks/useAuth'
+import { useModal, MODAL } from '../../context/ModalContext'
 
 export default function OTPModal() {
-  const navigate = useNavigate()
+  const { register } = useAuth()
+  const { closeModal, openModal, modalData } = useModal()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [seconds, setSeconds] = useState(60)
 
-  function handleVerify(e) {
-    e.preventDefault()
-    if (code.length < 6) { setError('Please enter the full 6-digit code.'); return }
+  useEffect(() => {
+    if (seconds === 0) return
+    const t = setTimeout(() => setSeconds(s => s - 1), 1000)
+    return () => clearTimeout(t)
+  }, [seconds])
+
+  function submitCode() {
     setLoading(true)
     setError('')
-    // Mock verification
     setTimeout(() => {
+      if (modalData) {
+        register(modalData.name, modalData.email, modalData.password)
+      }
       setLoading(false)
-      navigate('/welcome')
+      openModal(MODAL.SUCCESS)
     }, 900)
+  }
+
+  function handleOTPChange(val) {
+    setCode(val)
+    if (val.length === 4) submitCode()
   }
 
   function handleResend() {
     setCode('')
     setError('')
-    // Mock resend
+    setSeconds(60)
   }
 
   return (
-    <Modal onClose={() => navigate('/')} className="max-w-sm mx-auto">
-      <div className="p-8 flex flex-col gap-6 items-center text-center">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-mobile-h4 font-bold text-neutral-gray-10">Verify your email</h2>
-          <p className="text-[var(--font-size-text-sm)] text-neutral-gray-6">
-            We&apos;ve sent a 6-digit code to your email. Enter it below.
-          </p>
+    <Modal
+      onClose={closeModal}
+      xIcon={false}
+      mobileBreakpoint={640}
+      portalClassName="p-0! items-end sm:items-center sm:p-6!"
+      className="sm:max-w-125 min-h-[50vh] sm:min-h-0 rounded-none rounded-t-[20px]! sm:rounded-[20px]"
+    >
+      <div className="flex flex-col gap-8 pt-4 sm:p-4">
+        <div className="flex flex-col items-center gap-6 sm:text-center">
+          <div className="w-14 h-14 sm:w-18 sm:h-18 bg-primary rounded-full flex items-center justify-center">
+            <Icon icon="material-symbols:mail" width={26} className="w-6.5 sm:w-8 h-6.5 sm:h-8 text-white" />
+          </div>
+          <div className="flex flex-col items-center gap-2">
+            <h2 className="text-secondary text-xl sm:text-2xl font-semibold">
+              OTP Verification
+            </h2>
+            <p className="text-neutral-gray-8 text-sm text-center sm:text-base leading-6 max-w-[450px] sm:max-w-sm">
+              We&apos;ve sent a 4-digit code to{' '}
+              <span className="text-secondary font-semibold">
+                {modalData?.email ?? 'your email'}
+              </span>
+              . Check your email and enter the code below.
+            </p>
+          </div>
         </div>
 
-        <form onSubmit={handleVerify} className="w-full flex flex-col gap-5">
-          <OTPInput length={6} value={code} onChange={setCode} />
-
-          {error && (
-            <p className="text-[var(--font-size-text-xs)] text-error-7">{error}</p>
+        <div className="flex flex-col gap-4">
+          <OTPInput length={4} value={code} onChange={handleOTPChange} disabled={loading} />
+          {loading && (
+            <p className="text-sm text-primary text-center font-medium animate-pulse">
+              Verifying…
+            </p>
           )}
+          {error && <p className="text-sm text-error-7 text-center">{error}</p>}
+        </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            size="md"
-            loading={loading}
-            className="w-full"
-          >
-            Verify email
-          </Button>
-        </form>
-
-        <p className="text-[var(--font-size-text-sm)] text-neutral-gray-6">
-          Didn&apos;t receive the code?{' '}
-          <button onClick={handleResend} className="text-success-8 font-medium hover:underline">
-            Resend code
-          </button>
+        <p className="text-sm text-center text-neutral-gray-8">
+          {seconds > 0 ? (
+            <>
+              You can resend the code in{' '}
+              <span className="text-primary font-semibold">{seconds} seconds</span>
+            </>
+          ) : (
+            <>
+              Didn&apos;t receive the code?{' '}
+              <button
+                onClick={handleResend}
+                className="text-primary font-semibold hover:underline"
+              >
+                Resend code
+              </button>
+            </>
+          )}
         </p>
       </div>
     </Modal>

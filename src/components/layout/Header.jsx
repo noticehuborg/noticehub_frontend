@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import Button from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
+import { useModal, MODAL } from "../../context/ModalContext";
 import logoAndText from "../../assets/img/logoandtext.png";
 
 // Nav links for public header
@@ -72,7 +73,7 @@ function SearchBar({ className = "" }) {
 /* Public header: Logo + nav + Login + Get Started                     */
 /* ------------------------------------------------------------------ */
 function PublicHeader({ onMobileToggle, mobileOpen }) {
-  const navigate = useNavigate();
+  const { openModal } = useModal();
 
   return (
     <nav className="flex items-center justify-between w-full">
@@ -131,7 +132,7 @@ function PublicHeader({ onMobileToggle, mobileOpen }) {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => navigate("/login")}
+          onClick={() => openModal(MODAL.LOGIN)}
           className="hidden! sm:flex! px-6! py-2.5!"
         >
           Login
@@ -139,7 +140,7 @@ function PublicHeader({ onMobileToggle, mobileOpen }) {
         <Button
           variant="primary"
           size="sm"
-          onClick={() => navigate("/register")}
+          onClick={() => openModal(MODAL.REGISTER)}
           className="px-6! sm:py-2.5!"
         >
           Sign up
@@ -320,8 +321,8 @@ function DashboardHeader({ onSidebarToggle }) {
 /* Mobile menu drawer (shared by public + authenticated variants)      */
 /* ------------------------------------------------------------------ */
 function MobileMenu({ variant, onClose }) {
-  const navigate = useNavigate();
   const { logout } = useAuth();
+  const { openModal } = useModal();
 
   return (
     <div className="lg:hidden absolute left-0 right-0 top-full border-t border-neutral-gray-3 px-4 py-4 flex flex-col gap-3 bg-white shadow-md z-40">
@@ -345,13 +346,13 @@ function MobileMenu({ variant, onClose }) {
       ) : null}
 
       {variant === "public" && (
-        <div className="sm:hidden flex flex-col gap-2 pt-2 border-t border-neutral-gray-3">
+        <div className="sm:hidden flex flex-col gap-2 pt-2 sm:border-none border-t border-neutral-gray-3">
           <Button
             variant="primary"
             size="sm"
             onClick={() => {
-              navigate("/login");
               onClose();
+              openModal(MODAL.LOGIN);
             }}
             className="py-2.5"
           >

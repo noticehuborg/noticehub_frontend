@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 // Layouts
 import PublicLayout from '../components/layout/PublicLayout'
@@ -8,12 +8,6 @@ import DashboardLayout from '../components/layout/DashboardLayout'
 import HomePage from '../pages/public/HomePage'
 import AboutPage from '../pages/public/AboutPage'
 import ContactPage from '../pages/public/ContactPage'
-
-// Auth modals
-import LoginModal from '../pages/auth/LoginModal'
-import RegisterModal from '../pages/auth/RegisterModal'
-import OTPModal from '../pages/auth/OTPModal'
-import SuccessModal from '../pages/auth/SuccessModal'
 
 // Dashboard pages
 import FeedPage from '../pages/dashboard/FeedPage'
@@ -37,10 +31,10 @@ const router = createBrowserRouter([
       { path: "about", element: <AboutPage /> },
       { path: "contact", element: <ContactPage /> },
       { path: "components", element: <ComponentPage /> },
-      { path: "login", element: <LoginModal /> },
-      { path: "register", element: <RegisterModal /> },
-      { path: "verify", element: <OTPModal /> },
-      { path: "welcome", element: <SuccessModal /> },
+      { path: "login", element: <Navigate to="/" replace /> },
+      { path: "register", element: <Navigate to="/" replace /> },
+      { path: "verify", element: <Navigate to="/" replace /> },
+      { path: "welcome", element: <Navigate to="/" replace /> },
     ],
   },
   {

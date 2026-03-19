@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Icon } from "@iconify/react";
+import { motion } from "framer-motion";
 import Button from "../../components/ui/Button";
 import SectionTitle from "../../components/common/SectionTitle";
 import Tabs from "../../components/ui/Tabs";
 import { useState } from "react";
+import { useModal, MODAL } from "../../context/ModalContext";
 import LinesVectorBg from "../../assets/svg/linesvectorbg.svg";
 import Hero1 from "../../assets/img/hero1.jpg";
 import Hero2 from "../../assets/img/hero2.jpg";
@@ -87,6 +89,7 @@ const roleData = {
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { openModal } = useModal();
   const [activeTab, setActiveTab] = useState("students");
   const activeRole = roleData[activeTab];
 
@@ -98,12 +101,17 @@ export default function HomePage() {
           <img
             src={LinesVectorBg}
             alt="Background pattern"
-            className="opacity-70 object-center object-cover w-500"
+            className="opacity-70 object-center object-cover w-200 h-200 md:w-300 md:h-300 lg:w-full lg:h-full"
           />
         </div>
         <div className="relative w-full mt-24 md:mt-26 lg:mt-30  pb-28 inline-flex flex-col justify-center items-center gap-16 md:gap-24">
           <div className="max-w-170 flex flex-col justify-center items-center gap-10 md:gap-12">
-            <div className="text-center flex flex-col justify-center items-center gap-4 md:gap-7">
+            <motion.div
+              className="text-center flex flex-col justify-center items-center gap-4 md:gap-7"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, ease: [0.22, 0.61, 0.36, 1] }}
+            >
               <div className="text-4xl xsm:text-[40px] sm:text-5xl md:text-6xl lg:text-[68px] xl:text-7xl font-semibold leading 10 xsm:leading-[48px] sm:leading-[56px] md:leading-[64px] lg:leading-[75px] xl:leading-[86.40px]">
                 <span class="text-secondary ">Never miss a</span>
                 <br />
@@ -115,12 +123,17 @@ export default function HomePage() {
                 notifications, track deadlines, and access all your course
                 resources in one place.
               </div>
-            </div>
-            <div className="inline-flex flex-col sm:flex-row items-center gap-4 md:gap-6">
+            </motion.div>
+            <motion.div
+              className="inline-flex flex-col sm:flex-row items-center gap-4 md:gap-6"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
+            >
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => navigate("/register")}
+                onClick={() => openModal(MODAL.REGISTER)}
                 className="py-3! text-sm! sm:text-base! w-full sm:w-auto"
               >
                 Get Started
@@ -129,14 +142,23 @@ export default function HomePage() {
               <Button
                 variant="outline"
                 size="md"
-                onClick={() => navigate("/login")}
+                onClick={() =>
+                  document
+                    .getElementById("features")
+                    ?.scrollIntoView({ behavior: "smooth" })
+                }
                 className="py-3! text-sm! sm:text-base! w-full sm:w-auto"
               >
                 Learn More
               </Button>
-            </div>
+            </motion.div>
           </div>
-          <div className="relative w-[667.48px] sm:w-[850px] md:w-[1038px] lg:w-[1130px] h-87.5 sm:h-113.5 md:h-140.25 lg:h-[650.32px] rounded-[30px]">
+          <motion.div
+            className="relative w-[667.48px] sm:w-[850px] md:w-[1038px] lg:w-[1130px] h-87.5 sm:h-113.5 md:h-140.25 lg:h-[650.32px] rounded-[30px]"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.9, delay: 0.35, ease: [0.22, 0.61, 0.36, 1] }}
+          >
             <img
               className="absolute object-center object-cover w-96 sm:w-[488px] md:w-[596px] lg:w-[650px] h-72 sm:h-[375px] md:h-[464px] lg:h-[550px] rounded-2xl md:rounded-[28px] lg:rounded-[30px] left-0 top-[62.15px] sm:top-[79px] md:top-[97px] lg:top-[100px]"
               src={Hero1}
@@ -145,7 +167,7 @@ export default function HomePage() {
               className="absolute object-center object-cover w-96 sm:w-[488px] md:w-[596px] lg:w-[650px] h-72 sm:h-[375px] md:h-[464px] lg:h-[550px] rounded-2xl md:rounded-[28px] lg:rounded-[30px] left-[270.07px] sm:left-[344px] md:left-[420px] lg:left-[480px] top-0"
               src={Hero2}
             />
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -201,8 +223,12 @@ The frustrating part is that the information was always there. It was posted, it
           />
           <div className="w-full grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-0">
             {features.map((f, i) => (
-              <div
+              <motion.div
                 key={f.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: i * 0.1, ease: [0.22, 0.61, 0.36, 1] }}
                 className={[
                   i < features.length - 1 ? "border-b border-stone-200/20" : "",
                   i % 2 === 0 ? "lg:border-r lg:border-stone-200/20" : "",
@@ -216,13 +242,13 @@ The frustrating part is that the information was always there. It was posted, it
                   desc={f.desc}
                   iconClass={f.iconClass}
                 />
-              </div>
+              </motion.div>
             ))}
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate("/about")}
+            onClick={() => navigate("/about#our-solution")}
           >
             See All Features
             <Icon icon="tabler:arrow-right" width="24" height="24" />
@@ -248,8 +274,16 @@ The frustrating part is that the information was always there. It was posted, it
             onColor
           />
           <div className="w-full grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-10 py-4">
-            {howItWorksSteps.map((step) => (
-              <HowItWorksCard key={step.title} {...step} />
+            {howItWorksSteps.map((step, i) => (
+              <motion.div
+                key={step.title}
+                initial={{ opacity: 0, y: 35 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ duration: 0.55, delay: i * 0.15, ease: [0.22, 0.61, 0.36, 1] }}
+              >
+                <HowItWorksCard {...step} />
+              </motion.div>
             ))}
           </div>
         </div>
@@ -285,7 +319,7 @@ The frustrating part is that the information was always there. It was posted, it
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => navigate("/register")}
+                onClick={() => openModal(MODAL.REGISTER)}
                 className="self-start px-5 py-2.5 text-sm rounded-[14px]!"
               >
                 Register
@@ -320,7 +354,7 @@ The frustrating part is that the information was always there. It was posted, it
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate("/register")}
+              onClick={() => openModal(MODAL.REGISTER)}
               className="w-fit text-secondary!"
             >
               Create Your Account

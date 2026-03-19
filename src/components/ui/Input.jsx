@@ -6,7 +6,7 @@ export default function Input({
   id,
   type = 'text',
   placeholder,
-  error,
+  error = false,
   className = '',
   ...props
 }) {
@@ -26,23 +26,25 @@ export default function Input({
           id={id}
           type={inputType}
           placeholder={placeholder}
-          className={`input-base ${error ? 'border-error-7 focus:border-error-7 focus:ring-error-7/20' : ''} ${isPassword ? 'pr-11' : ''} ${className}`}
+          className={`input-base ${error ? "ring-1 ring-error-7" : ""} ${isPassword ? "pr-11" : ""} ${className}`}
           {...props}
         />
         {isPassword && (
           <button
             type="button"
             onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-gray-6 hover:text-neutral-gray-9 transition-colors"
+            className="
+             cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-neutral-gray-6 hover:text-neutral-gray-8 transition-colors"
             tabIndex={-1}
           >
-            <Icon icon={showPassword ? 'mdi:eye-off-outline' : 'mdi:eye-outline'} width={20} />
+            <Icon
+              icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
+              width={20}
+            />
           </button>
         )}
       </div>
-      {error && (
-        <p className="text-[var(--font-size-text-xs)] text-error-7">{error}</p>
-      )}
+      {error && <p className="text-xs md:text-sm text-error-7">{error}</p>}
     </div>
-  )
+  );
 }
