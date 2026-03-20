@@ -17,6 +17,9 @@ import AssignmentNoticePage from '../pages/dashboard/AssignmentNoticePage'
 import ResourcesPage from '../pages/dashboard/ResourcesPage'
 import GeneralMessagePage from '../pages/dashboard/GeneralMessagePage'
 import SearchPage from '../pages/dashboard/SearchPage'
+import MyPostsPage from '../pages/dashboard/MyPostsPage'
+import NotificationsPage from '../pages/dashboard/NotificationsPage'
+import ProfilePage from '../pages/dashboard/ProfilePage'
 import ComponentPage from '../pages/public/ComponentPage'
 
 // Guards
@@ -53,6 +56,9 @@ const router = createBrowserRouter([
       { path: "resources", element: <ResourcesPage /> },
       { path: "general", element: <GeneralMessagePage /> },
       { path: "search", element: <SearchPage /> },
+      { path: "my-posts", element: <MyPostsPage /> },
+      { path: "notifications", element: <NotificationsPage /> },
+      { path: "profile", element: <ProfilePage /> },
     ],
   },
 ]);

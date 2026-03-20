@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion, useInView } from "framer-motion";
+import { useInView } from "framer-motion";
 import { Icon } from "@iconify/react";
 import Button from "../../components/ui/Button";
 import SectionTitle from "../../components/common/SectionTitle";

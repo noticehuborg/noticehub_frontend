@@ -14,61 +14,6 @@ const publicLinks = [
   { label: "Components", to: "/components" },
 ];
 
-// Sidebar nav links label (for dashboard header reference)
-const dashboardLinks = [
-  {
-    label: "Feed",
-    to: "/dashboard/feed",
-    icon: "mdi:newspaper-variant-outline",
-  },
-  {
-    label: "Deadlines",
-    to: "/dashboard/deadlines",
-    icon: "mdi:calendar-clock-outline",
-  },
-  { label: "Exams", to: "/dashboard/exams", icon: "mdi:file-document-outline" },
-  {
-    label: "Assignments",
-    to: "/dashboard/assignments",
-    icon: "mdi:book-open-outline",
-  },
-  {
-    label: "Resources",
-    to: "/dashboard/resources",
-    icon: "mdi:folder-outline",
-  },
-];
-
-function SearchBar({ className = "" }) {
-  const navigate = useNavigate();
-  const [q, setQ] = useState("");
-
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (q.trim())
-      navigate(`/dashboard/search?q=${encodeURIComponent(q.trim())}`);
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className={`relative ${className}`}>
-      <Icon
-        icon="mdi:magnify"
-        width={18}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-gray-6"
-      />
-      <input
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        placeholder="Search notices..."
-        className="w-full pl-9 pr-4 py-2 rounded-xl border border-neutral-gray-4 bg-neutral-gray-2
-                   text-[var(--font-size-text-sm)] placeholder:text-neutral-gray-6
-                   focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20
-                   transition-all duration-200"
-      />
-    </form>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Public header: Logo + nav + Login + Get Started                     */
 /* ------------------------------------------------------------------ */
@@ -81,7 +26,7 @@ function PublicHeader({ onMobileToggle, mobileOpen }) {
         <img
           src={logoAndText}
           alt="NoticeHub Logo"
-          className="w-32.5 sm:w-36 md:w-44.5"
+          className="w-32.5 sm:w-36 md:w-40 lg:w-44.5"
         />
       </div>
       {/* Desktop nav links */}
@@ -107,25 +52,6 @@ function PublicHeader({ onMobileToggle, mobileOpen }) {
           </NavLink>
         ))}
       </div>
-
-      {/* Desktop CTA buttons */}
-      {/* <div className="hidden md:flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/login")}
-          className="font"
-        >
-          Login
-        </Button>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => navigate("/register")}
-        >
-          Sign up
-        </Button>
-      </div> */}
 
       {/* Mobile hamburger */}
       <div className="flex-center gap-2">
@@ -162,106 +88,119 @@ function PublicHeader({ onMobileToggle, mobileOpen }) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Authenticated header: Logo + nav + search + notifications + avatar  */
+/* Authenticated header: Logo + nav + bell + avatar + My feed btn     */
 /* ------------------------------------------------------------------ */
 function AuthenticatedHeader({ onMobileToggle, mobileOpen }) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [profileOpen, setProfileOpen] = useState(false);
+
+  const initials = user?.name
+    ? user.name
+        .split(" ")
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")
+        .toUpperCase()
+    : "U";
 
   return (
     <nav className="flex items-center justify-between w-full gap-4">
+      {/* Logo */}
+      <div>
+        <img
+          src={logoAndText}
+          alt="NoticeHub Logo"
+          className="w-32.5 sm:w-36 md:w-40 lg:w-44.5"
+        />
+      </div>
+
       {/* Desktop nav links */}
-      <div className="hidden md:flex items-center gap-8">
+      <div className="hidden lg:flex items-start mt-1 gap-8">
         {publicLinks.map((link) => (
           <NavLink
             key={link.to}
             to={link.to}
             end={link.to === "/"}
             className={({ isActive }) =>
-              `relative text-[var(--font-size-text-base)] font-medium transition-colors duration-200 pb-1
-               ${isActive ? "text-primary" : "text-neutral-gray-7 hover:text-neutral-gray-10"}`
+              `relative text-base transition-colors duration-200 outline-none
+               ${isActive ? "text-primary font-medium" : "text-neutral-gray-9 hover:text-primary"}`
             }
           >
             {({ isActive }) => (
-              <>
+              <div className="flex flex-col items-center gap-2 leading-none">
                 {link.label}
                 {isActive && (
-                  <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full" />
+                  <span className="w-4.5 h-0.5 bg-primary rounded-full" />
                 )}
-              </>
+              </div>
             )}
           </NavLink>
         ))}
       </div>
 
-      <div className="hidden md:flex items-center gap-3 ml-auto">
-        <SearchBar className="w-56 lg:w-72" />
-
-        {/* Notifications */}
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-gray-2 text-neutral-gray-7 hover:text-neutral-gray-10 transition-colors relative">
-          <Icon icon="mdi:bell-outline" width={22} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error-7" />
+      {/* Right: bell + avatar + My feed */}
+      <div className="flex items-center gap-4">
+        {/* Bell with number badge */}
+        <button
+          onClick={() => navigate("/dashboard/notifications")}
+          className="cursor-pointer relative w-9 h-9 flex items-center justify-center rounded-xl hover:bg-neutral-gray-4 transition-colors text-neutral-gray-9"
+          aria-label="Notifications"
+        >
+          <Icon icon="lucide:bell" width={20} />
+          <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-linear-to-b from-red-500 to-red-600 rounded-[10px] flex items-center justify-center text-white text-xs font-medium leading-none shadow-[0px_4px_6px_-4px_rgba(239,68,68,0.30),0px_10px_15px_-3px_rgba(239,68,68,0.30)]">
+            2
+          </span>
         </button>
 
-        {/* Avatar / profile dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => setProfileOpen((v) => !v)}
-            className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-[var(--font-size-text-sm)] hover:bg-primary-hover transition-colors"
-          >
-            {user?.name?.charAt(0).toUpperCase() || "U"}
-          </button>
-          {profileOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-neutral-gray-4 shadow-lg py-1 z-50">
-              <div className="px-4 py-2 border-b border-neutral-gray-3">
-                <p className="font-medium text-[var(--font-size-text-sm)] text-neutral-gray-10">
-                  {user?.name}
-                </p>
-                <p className="text-[var(--font-size-text-xs)] text-neutral-gray-6">
-                  {user?.email}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate("/");
-                  setProfileOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-[var(--font-size-text-sm)] text-error-7 hover:bg-error-2 transition-colors flex items-center gap-2"
-              >
-                <Icon icon="mdi:logout" width={16} />
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
+        {/* Avatar with blue gradient */}
+        <button
+          onClick={() => navigate("/dashboard/profile")}
+          className="cursor-pointer hover:mb-1 w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-200 ease-in-out"
+          aria-label="Profile"
+        >
+          <div className="w-8 h-8 bg-linear-to-b from-blue-8 to-blue-7 rounded-full flex items-center justify-center shadow-[0px_2px_4px_-4px_rgba(79,70,229,0.20),0px_5px_10px_-3px_rgba(79,70,229,0.20)]">
+            <span className="text-white text-sm font-medium leading-5">
+              {initials}
+            </span>
+          </div>
+        </button>
 
-      {/* Mobile hamburger */}
-      <button
-        onClick={onMobileToggle}
-        className="md:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-neutral-gray-2 transition-colors"
-        aria-label="Toggle menu"
-      >
-        <Icon icon={mobileOpen ? "mdi:close" : "mdi:menu"} width={24} />
-      </button>
+        {/* My feed button */}
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => navigate("/dashboard/feed")}
+          className="hidden! xsm:flex! px-6! sm:py-2.5!"
+        >
+          My feed
+        </Button>
+        {/* Mobile hamburger */}
+        <button
+          onClick={onMobileToggle}
+          className="lg:hidden w-fit h-fit flex items-center justify-center rounded-lg hover:bg-neutral-gray-2 transition-colors"
+          aria-label="Toggle menu"
+        >
+          <Icon
+            icon={mobileOpen ? "mdi:close" : "heroicons-solid:menu-alt-3"}
+            width={24}
+          />
+        </button>
+      </div>
     </nav>
   );
 }
 
 /* ------------------------------------------------------------------ */
-/* Dashboard header: Logo + search + notifications + avatar            */
+/* Dashboard header: Logo + search icon + bell + avatar + Go to site  */
 /* ------------------------------------------------------------------ */
 function DashboardHeader({ onSidebarToggle }) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <nav className="flex items-center justify-between w-full gap-4">
-      <div className="flex items-center gap-3">
-        {/* Sidebar toggle (mobile) */}
+    <nav className="flex items-center justify-between w-full gap-3">
+      {/* Left: hamburger (mobile only) + logo */}
+      <div className="flex items-center gap-2">
         <button
           onClick={onSidebarToggle}
           className="lg:hidden w-10 h-10 flex items-center justify-center rounded-lg hover:bg-neutral-gray-2 transition-colors"
@@ -269,49 +208,63 @@ function DashboardHeader({ onSidebarToggle }) {
         >
           <Icon icon="mdi:menu" width={24} />
         </button>
+        <img
+          src={logoAndText}
+          alt="NoticeHub"
+          className="w-30 sm:w-34 md:w-38 lg:w-44.5"
+        />
       </div>
 
-      <SearchBar className="hidden md:block w-64 lg:w-80" />
-
-      <div className="flex items-center gap-3">
-        {/* Notifications */}
-        <button className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-gray-2 text-neutral-gray-7 hover:text-neutral-gray-10 transition-colors relative">
-          <Icon icon="mdi:bell-outline" width={22} />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error-7" />
-        </button>
-
-        {/* Avatar / profile dropdown */}
-        <div className="relative">
+      {/* Right: action icons */}
+      <div className="flex items-center gap-3 sm:gap-5">
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Search icon */}
           <button
-            onClick={() => setProfileOpen((v) => !v)}
-            className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-[var(--font-size-text-sm)] hover:bg-primary-hover transition-colors"
+            onClick={() => navigate("/dashboard/search")}
+            className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-gray-4 text-neutral-gray-7 hover:text-neutral-gray-9 transition-colors"
+            aria-label="Search"
+          >
+            <Icon icon="mingcute:search-line" width={18} />
+          </button>
+
+          {/* Bell with badge */}
+          <button
+            onClick={() => navigate("/dashboard/notifications")}
+            className="cursor-pointer w-10 h-10 flex items-center justify-center rounded-full hover:bg-neutral-gray-4 text-neutral-gray-7 hover:text-neutral-gray-9 transition-colors relative"
+            aria-label="Notifications"
+          >
+            <Icon icon="lucide:bell" width={18} />
+            <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-linear-to-b from-red-500 to-red-600 rounded-[10px] flex items-center justify-center text-white text-xs font-medium leading-none shadow-[0px_4px_6px_-4px_rgba(239,68,68,0.30),0px_10px_15px_-3px_rgba(239,68,68,0.30)]">
+              2
+            </span>{" "}
+          </button>
+
+          {/* Avatar initials */}
+          <button
+            onClick={() => navigate("/dashboard/profile")}
+            className="cursor-pointer hover:mb-1 w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center font-semibold text-[var(--font-size-text-sm)] hover:bg-primary-hover transition-colors shrink-0"
+            aria-label="Profile"
           >
             {user?.name?.charAt(0).toUpperCase() || "U"}
           </button>
-          {profileOpen && (
-            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-neutral-gray-4 shadow-lg py-1 z-50">
-              <div className="px-4 py-2 border-b border-neutral-gray-3">
-                <p className="font-medium text-[var(--font-size-text-sm)] text-neutral-gray-10">
-                  {user?.name}
-                </p>
-                <p className="text-[var(--font-size-text-xs)] text-neutral-gray-6">
-                  {user?.email}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  logout();
-                  navigate("/");
-                  setProfileOpen(false);
-                }}
-                className="w-full text-left px-4 py-2 text-[var(--font-size-text-sm)] text-error-7 hover:bg-error-2 transition-colors flex items-center gap-2"
-              >
-                <Icon icon="mdi:logout" width={16} />
-                Sign out
-              </button>
-            </div>
-          )}
         </div>
+
+        {/* Go to Website — text button on lg+, icon on mobile */}
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => navigate("/")}
+          className="hidden! xsm:flex!  rounded-full! sm:rounded-xl! sm:px-4!  p-2.25! sm:py-2.5!"
+        >
+          <Icon
+            icon="iconoir:internet"
+            width={24}
+            className="w-4.5 h-4.5 md:w-6 md:h-6"
+          />
+          <span className="hidden sm:flex text-sm md:text-base">
+            Go to Website
+          </span>
+        </Button>
       </div>
     </nav>
   );
@@ -321,8 +274,8 @@ function DashboardHeader({ onSidebarToggle }) {
 /* Mobile menu drawer (shared by public + authenticated variants)      */
 /* ------------------------------------------------------------------ */
 function MobileMenu({ variant, onClose }) {
-  const { logout } = useAuth();
   const { openModal } = useModal();
+  const navigate = useNavigate();
 
   return (
     <div className="lg:hidden absolute left-0 right-0 top-full border-t border-neutral-gray-3 px-4 py-4 flex flex-col gap-3 bg-white shadow-md z-40">
@@ -335,7 +288,7 @@ function MobileMenu({ variant, onClose }) {
               end={link.to === "/"}
               onClick={onClose}
               className={({ isActive }) =>
-                `text-base font-medium py-2 px-3 rounded-lg transition-colors
+                `text-base text-center font-medium py-2 px-3 rounded-lg transition-colors
                  ${isActive ? "bg-blue-1 text-primary" : "text-neutral-gray-8 hover:bg-neutral-gray-2"}`
               }
             >
@@ -362,8 +315,18 @@ function MobileMenu({ variant, onClose }) {
       )}
 
       {variant === "authenticated" && (
-        <div className="pt-2 border-t border-neutral-gray-3">
-          <SearchBar className="w-full" />
+        <div className="xsm:hidden pt-2 xsm:border-none border-t border-neutral-gray-3">
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => {
+              onClose();
+              navigate("/dashboard/feed");
+            }}
+            className="w-full! py-2.5!"
+          >
+            My feed
+          </Button>
         </div>
       )}
     </div>
@@ -394,9 +357,9 @@ export default function Header({ variant = "public", onSidebarToggle }) {
 
   return (
     <header
-      className={`fixed top-0 z-40 w-full transition-all duration-300 ${scrolled ? "bg-neutral-gray-1 border-b border-neutral-gray-1 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.12)]" : "bg-transparent border-b border-transparent"}`}
+      className={`${variant === "dashboard" ? "" : "fixed"} top-0 z-40 w-full transition-all duration-300 ${scrolled || variant === "dashboard" ? "bg-neutral-gray-1 backdrop-blur-2xl border-b border-neutral-gray-1 shadow-[0px_1px_1px_0px_rgba(0,0,0,0.12)]" : "bg-transparent border-b border-transparent"}`}
     >
-      <div className="mx-auto px-5 md:px-8 xl:px-25 py-4">
+      <div className="mx-auto px-5 md:px-8 xl:px-25 py-3.5">
         {variant === "public" && (
           <PublicHeader onMobileToggle={toggleMobile} mobileOpen={mobileOpen} />
         )}

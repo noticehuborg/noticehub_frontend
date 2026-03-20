@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
-import { useNavigate } from "react-router-dom";
 import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
@@ -9,7 +8,6 @@ import { useModal, MODAL } from "../../context/ModalContext";
 import logo from "../../assets/img/logo.png";
 
 export default function LoginModal() {
-  const navigate = useNavigate();
   const { login, status } = useAuth();
   const { closeModal, openModal } = useModal();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -30,7 +28,6 @@ export default function LoginModal() {
     login(form.email, form.password);
     setTimeout(() => {
       closeModal();
-      navigate("/dashboard/feed");
     }, 900);
   }
 
