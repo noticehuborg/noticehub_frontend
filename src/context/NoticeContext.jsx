@@ -1,5 +1,6 @@
-import { createContext, useReducer, useEffect } from 'react'
+import { createContext, useReducer, useEffect, useCallback } from 'react'
 import { mockNotices, mockDeadlines } from '../services/mockData'
+// TODO: import { noticesService } from '../services/notices.service' — uncomment when backend is ready
 
 export const NoticeContext = createContext(null)
 
@@ -8,12 +9,23 @@ const initialState = {
   deadlines: [],
   activeFilter: 'all',
   loading: true,
+  error: null,
 }
 
 function noticeReducer(state, action) {
   switch (action.type) {
+    case 'LOADING':
+      return { ...state, loading: true, error: null }
     case 'LOAD':
-      return { ...state, notices: action.payload.notices, deadlines: action.payload.deadlines, loading: false }
+      return {
+        ...state,
+        notices: action.payload.notices,
+        deadlines: action.payload.deadlines,
+        loading: false,
+        error: null,
+      }
+    case 'ERROR':
+      return { ...state, loading: false, error: action.payload }
     case 'SET_FILTER':
       return { ...state, activeFilter: action.payload }
     default:
@@ -24,12 +36,27 @@ function noticeReducer(state, action) {
 export function NoticeProvider({ children }) {
   const [state, dispatch] = useReducer(noticeReducer, initialState)
 
-  useEffect(() => {
-    // Simulate async fetch
-    setTimeout(() => {
+  const fetchNotices = useCallback(async () => {
+    dispatch({ type: 'LOADING' })
+    try {
+      // TODO: swap mock for real API calls when backend is ready →
+      // const [noticesRes, deadlinesRes] = await Promise.all([
+      //   noticesService.getAll(),
+      //   noticesService.getDeadlines(),
+      // ])
+      // dispatch({ type: 'LOAD', payload: { notices: noticesRes.data, deadlines: deadlinesRes.data } })
+
+      // Mock: simulate network latency
+      await new Promise((r) => setTimeout(r, 500))
       dispatch({ type: 'LOAD', payload: { notices: mockNotices, deadlines: mockDeadlines } })
-    }, 500)
+    } catch (err) {
+      dispatch({ type: 'ERROR', payload: err?.message ?? 'Failed to load notices' })
+    }
   }, [])
+
+  useEffect(() => {
+    fetchNotices()
+  }, [fetchNotices])
 
   function setFilter(filter) {
     dispatch({ type: 'SET_FILTER', payload: filter })
@@ -41,7 +68,7 @@ export function NoticeProvider({ children }) {
       : state.notices.filter((n) => n.type === state.activeFilter)
 
   return (
-    <NoticeContext.Provider value={{ ...state, filteredNotices, setFilter }}>
+    <NoticeContext.Provider value={{ ...state, filteredNotices, setFilter, refetch: fetchNotices }}>
       {children}
     </NoticeContext.Provider>
   )

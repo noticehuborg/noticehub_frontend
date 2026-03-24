@@ -20,8 +20,6 @@ import SearchPage from '../pages/dashboard/SearchPage'
 import MyPostsPage from '../pages/dashboard/MyPostsPage'
 import NotificationsPage from '../pages/dashboard/NotificationsPage'
 import ProfilePage from '../pages/dashboard/ProfilePage'
-import ComponentPage from '../pages/public/ComponentPage'
-
 // Guards
 import ProtectedRoute from './ProtectedRoute'
 
@@ -33,7 +31,6 @@ const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: "about", element: <AboutPage /> },
       { path: "contact", element: <ContactPage /> },
-      { path: "components", element: <ComponentPage /> },
       { path: "login", element: <Navigate to="/" replace /> },
       { path: "register", element: <Navigate to="/" replace /> },
       { path: "verify", element: <Navigate to="/" replace /> },

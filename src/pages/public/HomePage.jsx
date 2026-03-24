@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Button from "../../components/ui/Button";
@@ -90,6 +91,17 @@ const roleData = {
 export default function HomePage() {
   const navigate = useNavigate();
   const { openModal } = useModal();
+  const { user } = useAuth();
+
+  function handleGetStarted() {
+    if (user) {
+      document
+        .getElementById("how-it-works")
+        ?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      openModal(MODAL.REGISTER);
+    }
+  }
   const [activeTab, setActiveTab] = useState("students");
   const activeRole = roleData[activeTab];
 
@@ -97,11 +109,11 @@ export default function HomePage() {
     <div>
       {/* ── HERO ── */}
       <section className="w-full relative bg-white overflow-hidden">
-        <div className="absolute w-full">
+        <div className="absolute w-full h-full">
           <img
             src={LinesVectorBg}
             alt="Background pattern"
-            className="opacity-70 object-center object-cover w-200 h-200 md:w-300 md:h-300 lg:w-full lg:h-full"
+            className="opacity-60 object-center object-cover w-200 h-full md:w-500"
           />
         </div>
         <div className="relative w-full mt-24 md:mt-26 lg:mt-30  pb-28 inline-flex flex-col justify-center items-center gap-16 md:gap-24">
@@ -128,12 +140,16 @@ export default function HomePage() {
               className="inline-flex flex-col sm:flex-row items-center gap-4 md:gap-6"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.25, ease: [0.22, 0.61, 0.36, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.25,
+                ease: [0.22, 0.61, 0.36, 1],
+              }}
             >
               <Button
                 variant="primary"
                 size="md"
-                onClick={() => openModal(MODAL.REGISTER)}
+                onClick={handleGetStarted}
                 className="py-3! text-sm! sm:text-base! w-full sm:w-auto"
               >
                 Get Started
@@ -157,7 +173,11 @@ export default function HomePage() {
             className="relative w-[667.48px] sm:w-[850px] md:w-[1038px] lg:w-[1130px] h-87.5 sm:h-113.5 md:h-140.25 lg:h-[650.32px] rounded-[30px]"
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.35, ease: [0.22, 0.61, 0.36, 1] }}
+            transition={{
+              duration: 0.9,
+              delay: 0.35,
+              ease: [0.22, 0.61, 0.36, 1],
+            }}
           >
             <img
               className="absolute object-center object-cover w-96 sm:w-[488px] md:w-[596px] lg:w-[650px] h-72 sm:h-[375px] md:h-[464px] lg:h-[550px] rounded-2xl md:rounded-[28px] lg:rounded-[30px] left-0 top-[62.15px] sm:top-[79px] md:top-[97px] lg:top-[100px]"
@@ -228,7 +248,11 @@ The frustrating part is that the information was always there. It was posted, it
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: i * 0.1, ease: [0.22, 0.61, 0.36, 1] }}
+                transition={{
+                  duration: 0.55,
+                  delay: i * 0.1,
+                  ease: [0.22, 0.61, 0.36, 1],
+                }}
                 className={[
                   i < features.length - 1 ? "border-b border-stone-200/20" : "",
                   i % 2 === 0 ? "lg:border-r lg:border-stone-200/20" : "",
@@ -280,7 +304,11 @@ The frustrating part is that the information was always there. It was posted, it
                 initial={{ opacity: 0, y: 35 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: i * 0.15, ease: [0.22, 0.61, 0.36, 1] }}
+                transition={{
+                  duration: 0.55,
+                  delay: i * 0.15,
+                  ease: [0.22, 0.61, 0.36, 1],
+                }}
               >
                 <HowItWorksCard {...step} />
               </motion.div>
@@ -354,10 +382,10 @@ The frustrating part is that the information was always there. It was posted, it
             <Button
               variant="outline"
               size="sm"
-              onClick={() => openModal(MODAL.REGISTER)}
+              onClick={() => user ? navigate("/dashboard") : openModal(MODAL.REGISTER)}
               className="w-fit text-secondary!"
             >
-              Create Your Account
+              {user ? "Go to Dashboard" : "Create Your Account"}
               <Icon icon="tabler:arrow-right" width={20} />
             </Button>
           </div>

@@ -4,7 +4,7 @@ export default function FaqItem({ question, answer, isOpen, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full text-left rounded-3xl transition-all duration-200 ${
+      className={`cursor-pointer w-full text-left rounded-3xl transition-all duration-200 ${
         isOpen
           ? "bg-secondary px-6 md:px-8 lg:px-12 py-6 lg:py-7 shadow-sm"
           : "bg-[#f7f7f7] px-6 md:px-8 lg:px-12 py-5 lg:py-7"

@@ -31,11 +31,11 @@ export default function ContactPage() {
     <div>
       {/* ── HERO ── */}
       <section className="relative bg-white overflow-hidden">
-        <div className="absolute w-full opacity-70">
+        <div className="absolute w-full h-full">
           <img
             src={LinesVectorBg}
             alt=""
-            className="opacity-70 object-center object-cover w-200 h-200 md:w-300 md:h-300 lg:w-full lg:h-full"
+            className="opacity-60 object-center object-cover w-200 h-full md:w-500"
           />
         </div>
         <div className="relative mt-24 mb-18 md:mt-26 md:mb-20 lg:mt-30 lg:mb-24 section-container  flex flex-col items-center text-center gap-7">

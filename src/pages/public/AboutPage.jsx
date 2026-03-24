@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { Icon } from "@iconify/react";
 import Button from "../../components/ui/Button";
 import SectionTitle from "../../components/common/SectionTitle";
@@ -264,11 +264,11 @@ export default function AboutPage() {
     <div>
       {/* ── HERO ── */}
       <section className="relative bg-white overflow-hidden">
-        <div className="absolute w-full opacity-70">
+        <div className="absolute w-full h-full">
           <img
             src={LinesVectorBg}
             alt=""
-            className="opacity-70 object-center object-cover w-200 h-200 md:w-300 md:h-300 lg:w-full lg:h-full"
+            className="opacity-60 object-center object-cover w-200 h-full md:w-500"
           />
         </div>
         <div className="relative mt-24 mb-18 md:mt-26 md:mb-20 lg:mt-30 lg:mb-24 section-container  flex flex-col items-center text-center gap-7">
@@ -319,7 +319,12 @@ export default function AboutPage() {
                     key={stat.label}
                     className={`flex flex-col items-center gap-3.5 text-center w-full py-11 first:pt-0 last:pb-0 ${i > 0 ? "border-t border-neutral-gray-3" : ""}`}
                   >
-                    <StatCounter value={stat.value} suffix={stat.suffix} label={stat.label} labelClass="text-lg" />
+                    <StatCounter
+                      value={stat.value}
+                      suffix={stat.suffix}
+                      label={stat.label}
+                      labelClass="text-lg"
+                    />
                   </div>
                 ))}
               </div>
@@ -332,7 +337,12 @@ export default function AboutPage() {
                       key={stat.label}
                       className={`max-w-[250px] flex flex-col items-center gap-3.5 text-center w-full py-16 first:pt-0 last:pb-0 ${i > 0 ? "border-t border-neutral-gray-3 px-5" : "px-5"}`}
                     >
-                      <StatCounter value={stat.value} suffix={stat.suffix} label={stat.label} labelClass="text-xl" />
+                      <StatCounter
+                        value={stat.value}
+                        suffix={stat.suffix}
+                        label={stat.label}
+                        labelClass="text-xl"
+                      />
                     </div>
                   ))}
                 </div>
@@ -343,7 +353,12 @@ export default function AboutPage() {
                       key={stat.label}
                       className={`max-w-[250px] flex flex-col items-center gap-3.5 text-center w-full py-16 first:pt-0 last:pb-0 ${i > 0 ? "border-t border-neutral-gray-3 px-5" : "px-5"}`}
                     >
-                      <StatCounter value={stat.value} suffix={stat.suffix} label={stat.label} labelClass="text-xl" />
+                      <StatCounter
+                        value={stat.value}
+                        suffix={stat.suffix}
+                        label={stat.label}
+                        labelClass="text-xl"
+                      />
                     </div>
                   ))}
                 </div>
@@ -363,16 +378,36 @@ export default function AboutPage() {
           />
           <div className="w-full grid grid-cols-1 xlg:grid-cols-2 xl:grid-cols-3 gap-7">
             {[
-              { number: "01", heading: "Deadlines Slip Through the Cracks", subtext: "Without a central place for academic notices, critical assignment deadlines and exam updates get buried under unrelated messages. Students scroll endlessly through WhatsApp threads only to miss what matters most, and by the time they find it, it's too late. The frustrating part is that the information was always there. It was posted, it existed, someone shared it." },
-              { number: "02", heading: "Lecturers Can't Reach Everyone", subtext: "Posting the same announcement across multiple platforms — WhatsApp, Telegram, email, and Drive — is exhausting and unreliable. There's no guarantee every student sees it, and no way to know who did. Important information falls through the gaps every single time. A WhatsApp group was never built for academic communication.", whiteCard: true },
-              { number: "03", heading: "Course Reps Are Overwhelmed", subtext: "Managing communication for an entire class across fragmented channels is a full-time job. Course representatives spend more time chasing students and reposting notices than actually representing their peers. One platform should handle all of it. And now it does." },
+              {
+                number: "01",
+                heading: "Deadlines Slip Through the Cracks",
+                subtext:
+                  "Without a central place for academic notices, critical assignment deadlines and exam updates get buried under unrelated messages. Students scroll endlessly through WhatsApp threads only to miss what matters most, and by the time they find it, it's too late. The frustrating part is that the information was always there. It was posted, it existed, someone shared it.",
+              },
+              {
+                number: "02",
+                heading: "Lecturers Can't Reach Everyone",
+                subtext:
+                  "Posting the same announcement across multiple platforms — WhatsApp, Telegram, email, and Drive — is exhausting and unreliable. There's no guarantee every student sees it, and no way to know who did. Important information falls through the gaps every single time. A WhatsApp group was never built for academic communication.",
+                whiteCard: true,
+              },
+              {
+                number: "03",
+                heading: "Course Reps Are Overwhelmed",
+                subtext:
+                  "Managing communication for an entire class across fragmented channels is a full-time job. Course representatives spend more time chasing students and reposting notices than actually representing their peers. One platform should handle all of it. And now it does.",
+              },
             ].map((card, i) => (
               <motion.div
                 key={card.number}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: i * 0.12, ease: [0.22, 0.61, 0.36, 1] }}
+                transition={{
+                  duration: 0.55,
+                  delay: i * 0.12,
+                  ease: [0.22, 0.61, 0.36, 1],
+                }}
               >
                 <ProblemCard {...card} className="w-full max-w-none h-full" />
               </motion.div>
@@ -422,11 +457,11 @@ export default function AboutPage() {
 
       {/* ── ROADMAP ── */}
       <section className="relative bg-section-bg">
-        <div className="absolute w-full opacity-50">
+        <div className="absolute w-full h-full">
           <img
             src={LinesVectorBg}
             alt=""
-            className="w-500 object-cover object-center"
+            className="opacity-60 object-center object-cover w-200 h-full md:w-500"
           />
         </div>
         <div className="section-container section-padding flex flex-col items-center gap-16 md:gap-20">
@@ -443,7 +478,11 @@ export default function AboutPage() {
                 initial={{ opacity: 0, y: 35 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.55, delay: idx * 0.15, ease: [0.22, 0.61, 0.36, 1] }}
+                transition={{
+                  duration: 0.55,
+                  delay: idx * 0.15,
+                  ease: [0.22, 0.61, 0.36, 1],
+                }}
               >
                 <div
                   className={`${idx == 1 ? "w-22.5 h-22.5" : "w-17.5 h-17.5"}  rounded-full ${phase.iconBg} ring-[10px] ${phase.iconRing} flex items-center justify-center text-white`}
@@ -523,10 +562,10 @@ export default function AboutPage() {
               <button
                 onClick={scrollTeamPrev}
                 disabled={!canScrollLeft}
-                className={`cursor-pointer group w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                className={`group w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
                   canScrollLeft
-                    ? "border border-blue-3 hover:bg-primary hover:border-primary"
-                    : "border border-neutral-gray-4"
+                    ? "cursor-pointer border border-blue-3 hover:bg-primary hover:border-primary"
+                    : "disabled:cursor-not-allowed border border-neutral-gray-4"
                 }`}
               >
                 <Icon
@@ -538,15 +577,15 @@ export default function AboutPage() {
               <button
                 onClick={scrollTeamNext}
                 disabled={!canScrollRight}
-                className={`cursor-pointer group w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
+                className={`group w-14 h-14 rounded-full flex items-center justify-center transition-colors ${
                   canScrollRight
-                    ? "border border-blue-3 hover:bg-primary hover:border-primary"
-                    : "border border-neutral-gray-4"
+                    ? "cursor-pointer border border-blue-3 hover:bg-primary hover:border-primary"
+                    : "disabled:cursor-not-allowed border border-neutral-gray-4"
                 }`}
               >
                 <Icon
                   icon="akar-icons:chevron-right"
-                    width={24}
+                  width={24}
                   className={`w-5.5 sm:w-6 ${canScrollRight ? "text-primary group-hover:text-blue-1" : "text-neutral-gray-4"}`}
                 />
               </button>

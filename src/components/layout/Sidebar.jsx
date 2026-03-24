@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { Icon } from "@iconify/react";
 import { useAuth } from "../../hooks/useAuth";
 
@@ -19,7 +19,7 @@ const mainNavItems = [
 const myPostsItem = {
   label: "My Posts",
   to: "/dashboard/my-posts",
-  icon: "mdi:pencil-outline",
+  icon: "hugeicons:files-01",
 };
 
 const secondaryNavItems = [
@@ -35,20 +35,13 @@ const secondaryNavItems = [
   },
 ];
 
-export default function Sidebar({ isMobile = false, onToggle }) {
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
+export default function Sidebar({ isMobile = false, onToggle, onLogoutRequest }) {
+  const { user } = useAuth();
 
   const canPost = user?.role === "lecturer" || user?.role === "course_rep";
   const allNavItems = canPost ? [...mainNavItems, myPostsItem] : mainNavItems;
   const iconSize = isMobile ? 20 : 28;
   const rounded = isMobile ? "rounded-xl" : "rounded-2xl";
-
-  function handleLogout() {
-    logout();
-    navigate("/");
-    onToggle?.();
-  }
 
   // Desktop: collapsed = icon only (p-3.5, gap-0, w-auto so bg hugs icon)
   //          expanded  = icon + label (px-4 py-3.5, gap-2, w-full)
@@ -111,7 +104,7 @@ export default function Sidebar({ isMobile = false, onToggle }) {
       {/* Top nav */}
       <div className={`flex flex-col ${isMobile ? "gap-3.5 w-52" : "gap-4"}`}>
         {allNavItems.map((item) => (
-          <NavLink key={item.to} to={item.to} className={navClassName}>
+          <NavLink key={item.to} to={item.to} className={navClassName} onClick={isMobile ? onToggle : undefined}>
             {({ isActive }) => renderItem(item, isActive)}
           </NavLink>
         ))}
@@ -120,14 +113,14 @@ export default function Sidebar({ isMobile = false, onToggle }) {
       {/* Bottom nav */}
       <div className={`flex flex-col gap-3 ${isMobile ? "w-52" : ""}`}>
         {secondaryNavItems.map((item) => (
-          <NavLink key={item.to} to={item.to} className={navClassName}>
+          <NavLink key={item.to} to={item.to} className={navClassName} onClick={isMobile ? onToggle : undefined}>
             {({ isActive }) => renderItem(item, isActive)}
           </NavLink>
         ))}
 
         {/* Logout */}
         <button
-          onClick={handleLogout}
+          onClick={onLogoutRequest}
           className={`cursor-pointer flex items-center transition-all text-error-8 ${rounded}
             ${
               isMobile

@@ -41,7 +41,7 @@ export default function LoginModal() {
         {/* Desktop left brand panel */}
         <div className="relative hidden md:flex w-[47%] shrink-0 flex-col gap-8 px-5 py-8 lg:px-6 lg:py-8 bg-linear-to-b from-primary to-[#6366F1] rounded-2xl">
           <div className="flex flex-col gap-3">
-            <h2 className="text-white text-3xl lg:text-[32px] font-bold leading-tight">
+            <h2 className="text-white text-3xl lg:text-[32px] font-semibold leading-tight">
               Welcome Back!
             </h2>
             <p className="text-indigo-100 text-base lg:text-lg leading-normal">
@@ -89,7 +89,7 @@ export default function LoginModal() {
           {/* Mobile gradient banner */}
           <div className="md:hidden px-5 py-7 bg-linear-to-b from-primary to-indigo-500 rounded-2xl relative overflow-hidden">
             <div className="flex flex-col gap-3 relative z-10">
-              <h2 className="text-white text-xl font-bold">Welcome Back!</h2>
+              <h2 className="text-white text-xl font-semibold">Welcome Back!</h2>
               <p className="text-indigo-50 text-sm leading-5 max-w-64">
                 Login to access your personalized announcement feed.
               </p>
