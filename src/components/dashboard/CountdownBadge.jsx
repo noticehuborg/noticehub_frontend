@@ -18,7 +18,7 @@ function Dot({ critical = false }) {
 export default function CountdownBadge({ dueDate, type }) {
   const { days, hrs, min, sec, expired } = useCountdown(dueDate);
   if (expired) return null;
-  const critical = days <= 3;
+  const critical = days < 3;
   const label = DUE_LABEL[type] || "Due Date";
   const formatted = new Date(dueDate).toLocaleDateString("en-US", {
     weekday: "short", month: "short", day: "numeric",
