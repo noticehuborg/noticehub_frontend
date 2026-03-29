@@ -67,7 +67,7 @@ export default function LoginModal() {
     <Modal
       onClose={closeModal}
       portalClassName="p-0! items-end md:items-center md:p-6!"
-      className="max-w-250 min-h-[75vh] md:min-h-[65vh] md:h-[min(550px,85vh)] md:overflow-hidden rounded-none rounded-t-[20px]! md:rounded-[20px]"
+      className="max-w-250 min-h-[75vh] md:min-h-[65vh] md:h-[min(550px,85vh)] overflow-hidden rounded-none rounded-t-[20px]! md:rounded-[20px]"
     >
       <div className="flex flex-col md:flex-row h-full">
         {/* Desktop left brand panel */}
