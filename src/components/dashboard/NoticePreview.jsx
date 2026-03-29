@@ -230,7 +230,7 @@ export default function NoticePreview({ notice, inModal = false }) {
                 return (
                   <div
                     key={att.id}
-                    className="relative w-full md:w-[250px] h-14 pl-2 py-2 bg-zinc-100 rounded-[10px] shadow-[0px_1px_2px_0px_rgba(10,13,18,0.05)] border border-neutral-gray-3 flex items-center gap-1.5"
+                    className="group relative w-full md:w-[250px] h-14 pl-2 py-2 bg-zinc-100 rounded-[10px] shadow-[0px_1px_2px_0px_rgba(10,13,18,0.05)] border border-neutral-gray-3 flex items-center gap-1.5"
                   >
                     {/* Clickable area — opens in new tab */}
                     <a
@@ -257,7 +257,7 @@ export default function NoticePreview({ notice, inModal = false }) {
                         if (att.url) downloadFile(att.url, att.name);
                       }}
                       title="Download"
-                      className="cursor-pointer absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow-[0px_1px_2px_0px_rgba(10,13,18,0.10)] flex items-center justify-center shrink-0 hover:bg-neutral-gray-2 transition-colors"
+                      className="cursor-pointer md:hidden md:group-hover:flex absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow-[0px_1px_2px_0px_rgba(10,13,18,0.10)] flex items-center justify-center shrink-0 hover:bg-neutral-gray-2 transition-colors"
                     >
                       <Icon icon="mage:download" className="w-3.5 h-3.5 text-neutral-gray-7" />
                     </button>

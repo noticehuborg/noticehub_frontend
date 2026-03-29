@@ -17,7 +17,7 @@ export default function CommentBubble({
 
   return (
     <div className="flex flex-col">
-      <div className="flex-1 px-4 py-3 bg-neutral-100 rounded-2xl flex flex-col gap-2.5 overflow-hidden">
+      <div className="flex-1 px-4 py-3 bg-zinc-100 rounded-2xl flex flex-col gap-2.5 overflow-hidden">
         <div className="flex justify-between items-center gap-2">
           <div className="flex items-center gap-1.5 flex-wrap">
             <div className="w-6 h-6 rounded-full bg-linear-to-b from-blue-8 to-blue-7 shadow-[0px_5px_10px_-3px_rgba(79,70,229,0.20)] flex items-center justify-center text-[8px] font-medium text-white shrink-0">
