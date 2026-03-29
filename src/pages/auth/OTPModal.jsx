@@ -63,7 +63,7 @@ export default function OTPModal() {
       xIcon={false}
       mobileBreakpoint={640}
       portalClassName="p-0! items-end sm:items-center sm:p-6!"
-      className="sm:max-w-125 min-h-[50vh] sm:min-h-0 rounded-none rounded-t-[20px]! sm:rounded-[20px]"
+      className="sm:max-w-125 min-h-[50vh] sm:min-h-0 rounded-none rounded-t-[20px]! overflow-hidden sm:rounded-[20px]"
     >
       <div className="flex flex-col gap-8 pt-4 sm:p-4">
         <div className="flex flex-col items-center gap-6 sm:text-center">

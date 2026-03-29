@@ -1,16 +1,29 @@
 import { Icon } from '@iconify/react'
-import { useNavigate } from 'react-router-dom'
 import Modal from '../../components/ui/Modal'
 import Button from '../../components/ui/Button'
-import { useModal } from '../../context/ModalContext'
+import { useModal, MODAL } from '../../context/ModalContext'
+
+const VARIANTS = {
+  // Shown after OTP verification on registration
+  verified: {
+    heading: "You're all set!",
+    message: "Your account has been verified. Welcome to NoticeHub — your notice feed is ready.",
+  },
+  // Shown after a successful password reset
+  passwordReset: {
+    heading: "Password successfully set!",
+    message: "Your password has been updated. You can now log in with your new password.",
+  },
+}
 
 export default function SuccessModal() {
-  const navigate = useNavigate()
-  const { closeModal } = useModal()
+  const { closeModal, openModal, modalData } = useModal()
+
+  const variant = VARIANTS[modalData?.variant] ?? VARIANTS.verified
 
   function handleLogin() {
     closeModal()
-    navigate('/login')
+    openModal(MODAL.LOGIN)
   }
 
   return (
@@ -21,11 +34,10 @@ export default function SuccessModal() {
         </div>
         <div className="flex flex-col gap-2">
           <h2 className="text-secondary text-2xl font-bold">
-            You&apos;re all set!
+            {variant.heading}
           </h2>
           <p className="text-neutral-gray-8 text-base leading-6">
-            Your account has been verified. Welcome to NoticeHub — your notice
-            feed is ready.
+            {variant.message}
           </p>
         </div>
         <Button

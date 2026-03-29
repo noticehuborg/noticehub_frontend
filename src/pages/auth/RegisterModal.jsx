@@ -117,7 +117,7 @@ export default function RegisterModal() {
     <Modal
       onClose={closeModal}
       portalClassName="p-0! items-end md:items-center md:p-6!"
-      className="max-w-270 h-[min(700px,85vh)] overflow-hidden rounded-none rounded-t-[20px]! md:rounded-[20px]"
+      className="max-w-270 h-[min(700px,85vh)] rounded-none rounded-t-[20px]! overflow-hidden md:rounded-[20px]"
     >
       <div className="flex flex-col md:flex-row h-full">
         {/* Desktop left brand panel */}

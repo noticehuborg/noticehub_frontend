@@ -52,7 +52,7 @@ export default function ForgotPasswordModal() {
       xIcon={false}
       mobileBreakpoint={640}
       portalClassName="p-0! items-end sm:items-center sm:p-6!"
-      className="sm:max-w-110 flex flex-col justify-center min-h-[40vh] rounded-none rounded-t-[20px]! sm:rounded-[20px]"
+      className="sm:max-w-110 flex flex-col justify-center min-h-[40vh] rounded-none rounded-t-[20px]! overflow-hidden sm:rounded-[20px]"
     >
       <div className="flex flex-col gap-6 pt-4 sm:pt-0">
         <div className="sm:text-center">
