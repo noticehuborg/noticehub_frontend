@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
 // Layouts
 import PublicLayout from '../components/layout/PublicLayout'
@@ -22,6 +23,21 @@ import NotificationsPage from '../pages/dashboard/NotificationsPage'
 import ProfilePage from '../pages/dashboard/ProfilePage'
 // Guards
 import ProtectedRoute from './ProtectedRoute'
+
+// Redirects lecturers to /dashboard/resources; everyone else to /dashboard/feed
+function DashboardIndex() {
+  const { user } = useAuth()
+  if (user?.role === 'lecturer') return <Navigate to="/dashboard/resources" replace />
+  return <Navigate to="/dashboard/feed" replace />
+}
+
+// Blocks lecturers from student-only pages and redirects them to resources
+function StudentOnlyRoute({ children }) {
+  const { user, initializing } = useAuth()
+  if (initializing) return null
+  if (user?.role === 'lecturer') return <Navigate to="/dashboard/resources" replace />
+  return children
+}
 
 const router = createBrowserRouter([
   {
@@ -47,16 +63,16 @@ const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <FeedPage /> },
-      { path: "feed", element: <FeedPage /> },
-      { path: "deadlines", element: <DeadlinesPage /> },
-      { path: "exams", element: <ExamsNoticePage /> },
-      { path: "assignments", element: <AssignmentNoticePage /> },
+      { index: true, element: <DashboardIndex /> },
+      { path: "feed", element: <StudentOnlyRoute><FeedPage /></StudentOnlyRoute> },
+      { path: "deadlines", element: <StudentOnlyRoute><DeadlinesPage /></StudentOnlyRoute> },
+      { path: "exams", element: <StudentOnlyRoute><ExamsNoticePage /></StudentOnlyRoute> },
+      { path: "assignments", element: <StudentOnlyRoute><AssignmentNoticePage /></StudentOnlyRoute> },
       { path: "resources", element: <ResourcesPage /> },
-      { path: "general", element: <GeneralMessagePage /> },
-      { path: "search", element: <SearchPage /> },
+      { path: "general", element: <StudentOnlyRoute><GeneralMessagePage /></StudentOnlyRoute> },
+      { path: "search", element: <StudentOnlyRoute><SearchPage /></StudentOnlyRoute> },
       { path: "my-posts", element: <MyPostsPage /> },
-      { path: "notifications", element: <NotificationsPage /> },
+      { path: "notifications", element: <StudentOnlyRoute><NotificationsPage /></StudentOnlyRoute> },
       { path: "profile", element: <ProfilePage /> },
     ],
   },

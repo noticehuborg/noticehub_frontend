@@ -22,6 +22,19 @@ const myPostsItem = {
   icon: "hugeicons:files-01",
 };
 
+const lecturerNavItems = [
+  {
+    label: "Resources",
+    to: "/dashboard/resources",
+    icon: "grommet-icons:resources",
+  },
+  {
+    label: "My Posts",
+    to: "/dashboard/my-posts",
+    icon: "hugeicons:files-01",
+  },
+];
+
 const secondaryNavItems = [
   {
     label: "Notifications",
@@ -35,11 +48,25 @@ const secondaryNavItems = [
   },
 ];
 
+const lecturerSecondaryNavItems = [
+  {
+    label: "Profile",
+    to: "/dashboard/profile",
+    icon: "fluent:person-20-regular",
+  },
+];
+
 export default function Sidebar({ isMobile = false, onToggle, onLogoutRequest }) {
   const { user } = useAuth();
 
-  const canPost = user?.role === "lecturer" || user?.role === "course_rep";
-  const allNavItems = canPost ? [...mainNavItems, myPostsItem] : mainNavItems;
+  const isLecturer = user?.role === "lecturer";
+  const canPost = user?.role === "course_rep";
+  const allNavItems = isLecturer
+    ? lecturerNavItems
+    : canPost
+    ? [...mainNavItems, myPostsItem]
+    : mainNavItems;
+  const allSecondaryItems = isLecturer ? lecturerSecondaryNavItems : secondaryNavItems;
   const iconSize = isMobile ? 20 : 28;
   const rounded = isMobile ? "rounded-xl" : "rounded-2xl";
 
@@ -112,7 +139,7 @@ export default function Sidebar({ isMobile = false, onToggle, onLogoutRequest })
 
       {/* Bottom nav */}
       <div className={`flex flex-col gap-3 ${isMobile ? "w-52" : ""}`}>
-        {secondaryNavItems.map((item) => (
+        {allSecondaryItems.map((item) => (
           <NavLink key={item.to} to={item.to} className={navClassName} onClick={isMobile ? onToggle : undefined}>
             {({ isActive }) => renderItem(item, isActive)}
           </NavLink>
