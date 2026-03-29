@@ -212,6 +212,16 @@ function ProfileDropdown({ user, navigate, onClose, onLogoutRequest }) {
           />
           Dashboard
         </button>
+        <button
+          onClick={() => {
+            navigate("/dashboard/feed");
+            onClose();
+          }}
+          className="xsm:hidden cursor-pointer flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-neutral-gray-7 hover:bg-section-bg hover:text-neutral-gray-9 transition-colors text-left"
+        >
+          <Icon icon="iconoir:internet" className="w-4 h-4 shrink-0" />
+          Go to Website
+        </button>
         <div className="my-1 border-t border-neutral-gray-2" />
         <button
           onClick={handleLogout}
