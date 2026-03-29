@@ -6,7 +6,8 @@ import Button from "../../components/ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { useModal, MODAL } from "../../context/ModalContext";
 import { useToast } from "../../context/ToastContext";
-import { getApiError, isGeneralError, getErrorStatus } from "../../utils/apiError";
+import { getApiError, getErrorStatus } from "../../utils/apiError";
+import { authService } from "../../services/auth.service";
 import logo from "../../assets/img/logo.png";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -18,10 +19,14 @@ export default function LoginModal() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showResend, setShowResend] = useState(false);
+  const [resending, setResending] = useState(false);
 
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
     setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
+    // Hide resend button as soon as the user edits anything
+    if (showResend) setShowResend(false);
   }
 
   function validate() {
@@ -37,8 +42,23 @@ export default function LoginModal() {
     return errs;
   }
 
+  async function handleResendOtp() {
+    setResending(true);
+    try {
+      await authService.resendOtp(form.email.trim());
+      addToast("OTP resent! Check your inbox.", "success");
+      setShowResend(false);
+      openModal(MODAL.OTP, { email: form.email.trim() });
+    } catch (err) {
+      addToast(getApiError(err) || "Failed to resend OTP. Try again.");
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
+    // Only field-level validation errors go under the input
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
@@ -52,13 +72,14 @@ export default function LoginModal() {
     } catch (err) {
       const httpStatus = getErrorStatus(err);
       if (httpStatus === 401) {
-        setErrors({ password: "Invalid email or password." });
+        // Wrong credentials — toast, not inline
+        addToast("Invalid email or password.", "error");
       } else if (httpStatus === 403) {
-        setErrors({ email: "Account not verified. Please check your email for the OTP." });
-      } else if (isGeneralError(err)) {
-        addToast(getApiError(err));
+        // Not verified — toast + show Resend OTP button
+        addToast("Your account hasn't been verified yet. Check your email for the OTP.", "error");
+        setShowResend(true);
       } else {
-        addToast(getApiError(err));
+        addToast(getApiError(err) || "Something went wrong. Please try again.", "error");
       }
     }
   }
@@ -187,16 +208,31 @@ export default function LoginModal() {
           </div>
 
           <div className="flex flex-col gap-3">
-            <Button
-              type="submit"
-              variant="primary"
-              size="md"
-              loading={status === "loading"}
-              className="w-full text-[15px] xsm:text-base! py-2.5!"
-            >
-              <Icon icon="mdi:password" width={18} />
-              Login
-            </Button>
+            <div className={`flex gap-2 ${showResend ? "flex-col xsm:flex-row" : ""}`}>
+              <Button
+                type="submit"
+                variant="primary"
+                size="md"
+                loading={status === "loading"}
+                className="flex-1 text-[15px] xsm:text-base! py-2.5!"
+              >
+                <Icon icon="mdi:password" width={18} />
+                Login
+              </Button>
+              {showResend && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="md"
+                  loading={resending}
+                  onClick={handleResendOtp}
+                  className="flex-1 text-[15px] xsm:text-base! py-2.5! border-warning-5 text-warning-7 hover:bg-warning-1!"
+                >
+                  <Icon icon="mdi:email-sync-outline" width={18} />
+                  {resending ? "Sending..." : "Resend OTP"}
+                </Button>
+              )}
+            </div>
             <p className="text-center text-sm text-neutral-gray-8">
               Don&apos;t have an account?{" "}
               <button
