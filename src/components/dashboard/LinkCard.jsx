@@ -21,7 +21,7 @@ export default function LinkCard({ lnk }) {
       className="w-full md:w-[250px] relative bg-zinc-100 rounded-xl px-4 py-2.5 overflow-hidden flex flex-col gap-0.5 hover:bg-neutral-gray-3 transition-colors group"
     >
       <p className="text-xs font-medium text-secondary leading-5 pr-8 max-w-[88%] w-full truncate">
-        {lnk.label}
+        {lnk.label || lnk.desc || lnk.url}
       </p>
       <p className="text-xs text-neutral-gray-6 truncate pr-8">{lnk.url}</p>
       <button

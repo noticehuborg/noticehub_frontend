@@ -1,24 +1,38 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
+import { useAuth } from "../../hooks/useAuth";
 import { useModal, MODAL } from "../../context/ModalContext";
+import { useToast } from "../../context/ToastContext";
+import { authService } from "../../services/auth.service";
+import { getApiError, getErrorStatus } from "../../utils/apiError";
 import logo from "../../assets/img/logo.png";
 
-const programs = [
-  { value: "cs", label: "Computer Science" },
-  { value: "it", label: "Information Technology" },
-];
-const levels = [
-  { value: "100", label: "Level 100" },
-  { value: "200", label: "Level 200" },
-  { value: "300", label: "Level 300" },
-  { value: "400", label: "Level 400" },
-];
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function RegisterModal() {
+  const { register, status } = useAuth();
   const { closeModal, openModal } = useModal();
+  const { addToast } = useToast();
+
+  // ── Programs & levels (fetched from backend) ──────────────────────────────
+  const [programsList, setProgramsList] = useState([]);
+  const [levelsList, setLevelsList] = useState([]);
+  const [programsLoading, setProgramsLoading] = useState(true);
+
+  useEffect(() => {
+    authService
+      .getPrograms()
+      .then(({ data }) => setProgramsList(data.data.programs))
+      .catch(() => {
+        // If the fetch fails, dropdowns stay empty; user will see "No programs available"
+      })
+      .finally(() => setProgramsLoading(false));
+  }, []);
+
+  // ── Form state ────────────────────────────────────────────────────────────
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -30,6 +44,26 @@ export default function RegisterModal() {
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // When program changes → derive available levels + reset level selection
+  useEffect(() => {
+    if (!form.program) {
+      setLevelsList([]);
+      return;
+    }
+    const selected = programsList.find((p) => p.value === form.program);
+    if (selected) {
+      setLevelsList(
+        selected.levels.map((l) => ({ value: l, label: `Level ${l}` }))
+      );
+    } else {
+      setLevelsList([]);
+    }
+    // Reset level when program changes so an invalid combo can't be submitted
+    setForm((f) => ({ ...f, level: "" }));
+    setErrors((e) => ({ ...e, level: "" }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.program, programsList]);
+
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
     setErrors((e2) => ({ ...e2, [e.target.name]: "" }));
@@ -37,31 +71,46 @@ export default function RegisterModal() {
 
   function validate() {
     const errs = {};
-    if (!form.name.trim()) errs.name = "Name is required.";
-    if (!form.email.trim()) errs.email = "Email is required.";
-    if (form.password.length < 8) errs.password = "At least 8 characters.";
-    if (form.password !== form.confirm)
-      errs.confirm = "Passwords do not match.";
+    if (!form.name.trim()) errs.name = "Full name is required.";
+    if (!form.email.trim()) {
+      errs.email = "Email is required.";
+    } else if (!EMAIL_RE.test(form.email.trim())) {
+      errs.email = "Enter a valid email address.";
+    }
+    if (form.password.length < 8) errs.password = "Password must be at least 8 characters.";
+    if (form.password !== form.confirm) errs.confirm = "Passwords do not match.";
     if (!form.program) errs.program = "Select a program.";
     if (!form.level) errs.level = "Select a level.";
     if (!agreed) errs.terms = "You must agree to the terms.";
     return errs;
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
-    openModal(MODAL.OTP, {
-      email: form.email,
-      name: form.name,
-      password: form.password,
-      program: form.program,
-      level: form.level,
-    });
+    try {
+      await register(form.name.trim(), form.email.trim(), form.password, form.program, form.level);
+      openModal(MODAL.OTP, { email: form.email.trim() });
+    } catch (err) {
+      const httpStatus = getErrorStatus(err);
+      if (httpStatus === 409) {
+        setErrors((prev) => ({ ...prev, email: "This email is already registered." }));
+      } else if (httpStatus === 400) {
+        // Program or level rejected by backend
+        const msg = err?.response?.data?.message ?? "Invalid program or level selected.";
+        if (msg.toLowerCase().includes("level")) {
+          setErrors((prev) => ({ ...prev, level: msg }));
+        } else {
+          setErrors((prev) => ({ ...prev, program: msg }));
+        }
+      } else {
+        addToast(getApiError(err));
+      }
+    }
   }
 
   return (
@@ -124,12 +173,12 @@ export default function RegisterModal() {
           </div>
         </div>
 
-        {/* Right panel — form is the flex column so footer sticks naturally */}
+        {/* Right panel */}
         <form
           onSubmit={handleSubmit}
           className="flex-1 flex flex-col gap-4.5 overflow-hidden py-0 md:px-6 md:pt-6 lg:px-10"
         >
-          {/* Scrollable area — includes banner + heading + inputs */}
+          {/* Scrollable area */}
           <div className="flex-1 min-h-0 overflow-y-auto scrollbar-hide pb-3">
             <div className="flex flex-col gap-4 pt-1 md:pt-0">
               {/* Mobile gradient banner */}
@@ -203,29 +252,34 @@ export default function RegisterModal() {
                 error={errors.confirm}
                 autoComplete="new-password"
               />
+
+              {/* Program + Level dropdowns — data from backend */}
               <div className="flex flex-col xsm:flex-row md:flex-col lg:flex-row gap-4">
                 <SelectField
                   id="reg-program"
                   name="program"
                   label="Program"
-                  placeholder="Select program"
+                  placeholder={programsLoading ? "Loading…" : "Select program"}
                   value={form.program}
                   onChange={handleChange}
-                  options={programs}
+                  options={programsList}
                   error={errors.program}
+                  disabled={programsLoading}
                 />
                 <SelectField
                   id="reg-level"
                   name="level"
                   label="Level"
-                  placeholder="Select level"
+                  placeholder={!form.program ? "Select program first" : "Select level"}
                   value={form.level}
                   onChange={handleChange}
-                  options={levels}
+                  options={levelsList}
                   error={errors.level}
+                  disabled={!form.program || programsLoading}
                 />
               </div>
-              {/* Checkbox — label wraps everything so clicking any text toggles it */}
+
+              {/* Terms checkbox */}
               <label className="flex items-start gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -252,7 +306,7 @@ export default function RegisterModal() {
                 </span>
               </label>
               {errors.terms && (
-                <p className="text-sm text-error-7 mb-1">{errors.terms}</p>
+                <p className="text-xs md:text-[13px] text-error-8 mb-1">{errors.terms}</p>
               )}
             </div>
           </div>
@@ -265,6 +319,7 @@ export default function RegisterModal() {
                 type="submit"
                 variant="primary"
                 size="sm"
+                loading={status === "loading"}
                 className="w-full text-[15px] xsm:text-base! py-2.5!"
               >
                 Create Account
@@ -296,6 +351,7 @@ function SelectField({
   onChange,
   options,
   error,
+  disabled = false,
 }) {
   return (
     <div className="flex flex-col gap-1.5 flex-1 min-w-0">
@@ -308,7 +364,9 @@ function SelectField({
           name={name}
           value={value}
           onChange={onChange}
-          className={`input-base appearance-none pr-8 ${error ? "ring-1 ring-error-7" : ""}`}
+          disabled={disabled}
+          className={`input-base appearance-none pr-8 disabled:opacity-60 disabled:cursor-not-allowed
+            ${error ? "border border-error-8" : ""}`}
         >
           <option value="" disabled>
             {placeholder}
@@ -325,7 +383,7 @@ function SelectField({
           className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-gray-6 pointer-events-none"
         />
       </div>
-      {error && <p className="text-xs text-error-7">{error}</p>}
+      {error && <p className="text-xs text-error-8">{error}</p>}
     </div>
   );
 }

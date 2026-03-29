@@ -35,6 +35,8 @@ const router = createBrowserRouter([
       { path: "register", element: <Navigate to="/" replace /> },
       { path: "verify", element: <Navigate to="/" replace /> },
       { path: "welcome", element: <Navigate to="/" replace /> },
+      // Password reset link from email lands here; PublicLayout auto-opens the modal
+      { path: "reset-password", element: <HomePage /> },
     ],
   },
   {

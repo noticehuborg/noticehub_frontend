@@ -1,27 +1,14 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
-
-// ─── Mock data ─────────────────────────────────────────────────────────────────
-const MOCK_USER = {
-  name: "Kwame Asante",
-  email: "kwame.asante@knust.edu.gh",
-  program: "Bsc. Computer Science",
-  level: "Level 300",
-  role: "Student",
-  department: "CS",
-  memberSince: "September 2022",
-};
+import { useAuth } from "../../hooks/useAuth";
+import { authService, normalizeUser } from "../../services/auth.service";
 
 // ─── Config ────────────────────────────────────────────────────────────────────
-const TABS = [
+const ALL_TABS = [
   { id: "personal", label: "Personal Info", icon: "fluent:person-20-regular" },
-  {
-    id: "security",
-    label: "Security",
-    icon: "fluent:shield-keyhole-16-regular",
-  },
+  { id: "security", label: "Security", icon: "fluent:shield-keyhole-16-regular" },
   { id: "level", label: "Level Correction", icon: "solar:chart-2-linear" },
 ];
 
@@ -57,20 +44,68 @@ function ReadField({ label, value, hint }) {
 }
 
 // ─── Personal Info Tab ─────────────────────────────────────────────────────────
-function PersonalInfoTab({ user, onGoToLevel }) {
+function PersonalInfoTab({ user, isLecturer, onGoToLevel, updateUser }) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user.name);
   const [draft, setDraft] = useState(user.name);
+  const [saving, setSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const fileInputRef = useRef(null);
+
+  // Revoke object URL on unmount to avoid memory leaks
+  useEffect(() => {
+    return () => { if (avatarPreview) URL.revokeObjectURL(avatarPreview); };
+  }, [avatarPreview]);
+
+  function handleAvatarClick() {
+    fileInputRef.current?.click();
+    // Also open edit mode so the Save button becomes visible
+    if (!editing) {
+      setDraft(name);
+      setEditing(true);
+    }
+  }
+
+  function handleAvatarChange(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+    // Reset input so the same file can be re-selected if needed
+    e.target.value = '';
+  }
 
   function handleEdit() {
     setDraft(name);
     setEditing(true);
   }
-  function handleSave() {
-    setName(draft.trim() || name);
-    setEditing(false);
+
+  async function handleSave() {
+    const trimmed = draft.trim() || name;
+    setSaving(true);
+    try {
+      const res = await authService.updateProfile({ name: trimmed, avatar: avatarFile || undefined });
+      const updatedUser = normalizeUser(res.data.data.user);
+      setName(updatedUser.name);
+      updateUser(updatedUser);
+      // Clear avatar state after successful upload
+      if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+    } catch {
+      // silently keep old values on error
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
   }
+
   function handleCancel() {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarFile(null);
+    setAvatarPreview(null);
     setEditing(false);
   }
 
@@ -92,15 +127,35 @@ function PersonalInfoTab({ user, onGoToLevel }) {
         )}
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 px-6 py-6 sm:py-8">
           <div className="relative shrink-0">
-            <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-white/20 flex items-center justify-center text-white text-2xl lg:text-3xl font-bold select-none">
-              {initials(name)}
-            </div>
-            <div className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm">
-              <Icon
-                icon="mdi:camera-outline"
-                className="w-3.5 h-3.5 text-primary"
+            {/* Avatar image or initials */}
+            {avatarPreview || user.avatar_url ? (
+              <img
+                src={avatarPreview || user.avatar_url}
+                alt={name}
+                className="w-16 h-16 lg:w-20 lg:h-20 rounded-full object-cover ring-2 ring-white/40 select-none"
               />
-            </div>
+            ) : (
+              <div className="w-16 h-16 lg:w-20 lg:h-20 rounded-full bg-white/20 flex items-center justify-center text-white text-2xl lg:text-3xl font-bold select-none">
+                {initials(name)}
+              </div>
+            )}
+            {/* Camera button */}
+            <button
+              type="button"
+              onClick={handleAvatarClick}
+              title="Change photo"
+              className="cursor-pointer absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white flex items-center justify-center shadow-sm hover:bg-neutral-gray-2 transition-colors"
+            >
+              <Icon icon="mdi:camera-outline" className="w-3.5 h-3.5 text-primary" />
+            </button>
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
           </div>
           <div className="flex flex-col gap-2 text-center sm:text-left">
             <div>
@@ -113,12 +168,22 @@ function PersonalInfoTab({ user, onGoToLevel }) {
               <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-[11px] font-medium">
                 {user.role}
               </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-[11px] font-medium">
-                {user.level}
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-[11px] font-medium">
-                {user.department}
-              </span>
+              {isLecturer ? (
+                user.position && (
+                  <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-[11px] font-medium">
+                    {user.position}
+                  </span>
+                )
+              ) : (
+                <>
+                  <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-[11px] font-medium">
+                    {user.level}
+                  </span>
+                  <span className="px-2.5 py-0.5 rounded-full bg-white/15 text-white text-[11px] font-medium">
+                    {user.department}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -169,40 +234,62 @@ function PersonalInfoTab({ user, onGoToLevel }) {
             </p>
           </div>
 
-          <ReadField label="Program" value={user.program} />
-
-          {/* Current Level — shows "Request Change →" when editing */}
-          <div className="flex flex-col gap-1.5">
-            <label className="text-sm font-medium text-neutral-gray-9">
-              Current Level
-            </label>
-            <div className="input-base bg-section-bg text-neutral-gray-5 flex items-center justify-between gap-2">
-              <span>{user.level}</span>
-              {editing && (
-                <button
-                  type="button"
-                  onClick={onGoToLevel}
-                  className="cursor-pointer text-xs font-medium text-primary hover:text-primary-hover whitespace-nowrap transition-colors"
-                >
-                  Request Change →
-                </button>
-              )}
-            </div>
-            {!editing && (
-              <p className="text-xs text-neutral-gray-5">
-                Use the Level Correction tab to request a change.
-              </p>
-            )}
-          </div>
+          {isLecturer ? (
+            <>
+              <ReadField label="Position" value={user.position || "—"} />
+              <div className="flex flex-col gap-1.5 sm:col-span-2">
+                <label className="text-sm font-medium text-neutral-gray-9">Assigned Courses</label>
+                {user.courses?.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {user.courses.map((c) => (
+                      <span key={c.id} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-1 text-primary text-xs font-medium">
+                        <Icon icon="mdi:book-open-outline" className="w-3 h-3 shrink-0" />
+                        {c.code} — {c.name}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-neutral-gray-5 italic">No courses assigned yet.</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <ReadField label="Program" value={user.program} />
+              {/* Current Level — shows "Request Change →" when editing */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-neutral-gray-9">
+                  Current Level
+                </label>
+                <div className="input-base bg-section-bg text-neutral-gray-5 flex items-center justify-between gap-2">
+                  <span>{user.level}</span>
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={onGoToLevel}
+                      className="cursor-pointer text-xs font-medium text-primary hover:text-primary-hover whitespace-nowrap transition-colors"
+                    >
+                      Request Change →
+                    </button>
+                  )}
+                </div>
+                {!editing && (
+                  <p className="text-xs text-neutral-gray-5">
+                    Use the Level Correction tab to request a change.
+                  </p>
+                )}
+              </div>
+            </>
+          )}
 
           <ReadField label="Member Since" value={user.memberSince} />
         </div>
 
         {editing && (
           <div className="flex items-center gap-3 pt-1 border-t border-neutral-gray-2">
-            <Button variant="primary" onClick={handleSave}>
+            <Button variant="primary" onClick={handleSave} disabled={saving}>
               <Icon icon="mdi:check" className="w-4 h-4" />
-              Save Changes
+              {saving ? "Saving..." : "Save Changes"}
             </Button>
             <button
               onClick={handleCancel}
@@ -227,26 +314,15 @@ function PersonalInfoTab({ user, onGoToLevel }) {
         <div className="flex flex-col divide-y divide-neutral-gray-2">
           {[
             { icon: "mdi:email-outline", label: "Email", value: user.email },
-            {
-              icon: "mdi:school-outline",
-              label: "Program",
-              value: user.program,
-            },
-            {
-              icon: "solar:chart-2-linear",
-              label: "Current Level",
-              value: user.level,
-            },
-            {
-              icon: "mdi:shield-account-outline",
-              label: "Role",
-              value: user.role,
-            },
-            {
-              icon: "mdi:clock-outline",
-              label: "Member Since",
-              value: user.memberSince,
-            },
+            ...(isLecturer
+              ? [{ icon: "mdi:briefcase-outline", label: "Position", value: user.position || "—" }]
+              : [
+                  { icon: "mdi:school-outline", label: "Program", value: user.program },
+                  { icon: "solar:chart-2-linear", label: "Current Level", value: user.level },
+                ]
+            ),
+            { icon: "mdi:shield-account-outline", label: "Role", value: user.role },
+            { icon: "mdi:clock-outline", label: "Member Since", value: user.memberSince },
           ].map(({ icon, label, value }) => (
             <div
               key={label}
@@ -276,10 +352,12 @@ function PersonalInfoTab({ user, onGoToLevel }) {
           <Icon icon="mdi:clock-outline" className="w-3.5 h-3.5" />
           Last login: Today
         </span>
-        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning-1 text-warning-7 text-xs font-medium outline outline-1 outline-warning-4">
-          <Icon icon="mdi:auto-fix" className="w-3.5 h-3.5" />
-          Auto-level active
-        </span>
+        {!isLecturer && (
+          <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-warning-1 text-warning-7 text-xs font-medium outline outline-1 outline-warning-4">
+            <Icon icon="mdi:auto-fix" className="w-3.5 h-3.5" />
+            Auto-level active
+          </span>
+        )}
       </div>
     </div>
   );
@@ -290,12 +368,13 @@ function SecurityTab() {
   const [form, setForm] = useState({ current: "", newPass: "", confirm: "" });
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   function set(key) {
     return (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     setError("");
     if (form.newPass.length < 8)
@@ -306,9 +385,17 @@ function SecurityTab() {
       return setError("Password must include at least one number.");
     if (form.newPass !== form.confirm)
       return setError("Passwords do not match.");
-    setSaved(true);
-    setForm({ current: "", newPass: "", confirm: "" });
-    setTimeout(() => setSaved(false), 4000);
+    setLoading(true);
+    try {
+      await authService.changePassword({ currentPassword: form.current, newPassword: form.newPass });
+      setSaved(true);
+      setForm({ current: "", newPass: "", confirm: "" });
+      setTimeout(() => setSaved(false), 4000);
+    } catch (err) {
+      setError(err?.response?.data?.message ?? "Failed to update password.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   const cardShadow =
@@ -381,9 +468,9 @@ function SecurityTab() {
             </div>
           )}
 
-          <Button variant="primary" type="submit">
+          <Button variant="primary" type="submit" disabled={loading}>
             <Icon icon="mdi:check" className="w-4 h-4" />
-            Update Password
+            {loading ? "Saving..." : "Update Password"}
           </Button>
         </form>
       </div>
@@ -396,13 +483,24 @@ function LevelCorrectionTab({ user }) {
   const [requested, setRequested] = useState("");
   const [reason, setReason] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   const progress = LEVEL_PROGRESS[user.level] ?? 75;
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     if (!requested || !reason.trim()) return;
-    setSubmitted(true);
+    setSubmitError("");
+    setSubmitting(true);
+    try {
+      await authService.requestLevelCorrection({ requested_level: requested, reason });
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err?.response?.data?.message ?? "Failed to submit request.");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   const cardShadow =
@@ -573,10 +671,17 @@ function LevelCorrectionTab({ user }) {
               </span>
             </div>
 
+            {submitError && (
+              <div className="px-4 py-3 bg-error-1 rounded-xl text-xs text-error-8 flex items-center gap-2">
+                <Icon icon="mdi:alert-circle-outline" className="w-4 h-4 shrink-0" />
+                {submitError}
+              </div>
+            )}
+
             <div className="flex items-center gap-3">
-              <Button variant="primary" type="submit">
+              <Button variant="primary" type="submit" disabled={submitting}>
                 <Icon icon="mdi:send-outline" className="w-4 h-4" />
-                Submit Request
+                {submitting ? "Submitting..." : "Submit Request"}
               </Button>
               <button
                 type="button"
@@ -599,6 +704,25 @@ function LevelCorrectionTab({ user }) {
 // ─── Profile Page ──────────────────────────────────────────────────────────────
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState("personal");
+  const { user, updateUser } = useAuth();
+
+  const isLecturer = user?.role === "lecturer";
+
+  // Build user shape compatible with sub-tabs
+  const profileUser = {
+    name: user?.name ?? "",
+    email: user?.email ?? "",
+    program: user?.program ?? "",
+    level: user?.level ?? "",
+    role: user?.role ?? "",
+    department: user?.program ?? "",
+    position: user?.position ?? "",
+    courses: user?.courses ?? [],
+    memberSince: user?.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "",
+    avatar_url: user?.avatar_url ?? null,
+  };
+
+  const TABS = isLecturer ? ALL_TABS.filter((t) => t.id !== "level") : ALL_TABS;
 
   const cardShadow =
     "bg-white rounded-2xl shadow-[0px_1px_2px_-1px_rgba(0,0,0,0.10),0px_1px_3px_0px_rgba(0,0,0,0.10)]";
@@ -611,31 +735,49 @@ export default function ProfilePage() {
         <div
           className={`${cardShadow} flex flex-col items-center gap-3 px-4 py-5 text-center`}
         >
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold select-none">
-            {initials(MOCK_USER.name)}
-          </div>
+          {profileUser.avatar_url ? (
+            <img
+              src={profileUser.avatar_url}
+              alt={profileUser.name}
+              className="w-16 h-16 rounded-full object-cover"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary text-2xl font-bold select-none">
+              {initials(profileUser.name)}
+            </div>
+          )}
           <div>
             <p className="text-sm font-semibold text-neutral-gray-10 leading-tight">
-              {MOCK_USER.name}
+              {profileUser.name}
             </p>
             <p className="text-xs text-neutral-gray-5 mt-0.5 truncate max-w-[180px]">
-              {MOCK_USER.email}
+              {profileUser.email}
             </p>
           </div>
           <div className="flex items-center gap-1.5 flex-wrap justify-center">
             <span className="px-2 py-0.5 rounded-full bg-blue-1 text-primary text-[11px] font-medium">
-              {MOCK_USER.role}
+              {profileUser.role}
             </span>
-            <span className="px-2 py-0.5 rounded-full bg-section-bg text-neutral-gray-7 text-[11px] font-medium">
-              {MOCK_USER.level}
-            </span>
-            <span className="px-2 py-0.5 rounded-full bg-section-bg text-neutral-gray-7 text-[11px] font-medium">
-              {MOCK_USER.department}
-            </span>
+            {isLecturer ? (
+              profileUser.position && (
+                <span className="px-2 py-0.5 rounded-full bg-section-bg text-neutral-gray-7 text-[11px] font-medium">
+                  {profileUser.position}
+                </span>
+              )
+            ) : (
+              <>
+                <span className="px-2 py-0.5 rounded-full bg-section-bg text-neutral-gray-7 text-[11px] font-medium">
+                  {profileUser.level}
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-section-bg text-neutral-gray-7 text-[11px] font-medium">
+                  {profileUser.department}
+                </span>
+              </>
+            )}
           </div>
           <div className="w-full border-t border-neutral-gray-2 pt-3 flex flex-col gap-1">
             <p className="text-xs text-neutral-gray-5">
-              Joined: {MOCK_USER.memberSince}
+              Joined: {profileUser.memberSince}
             </p>
           </div>
         </div>
@@ -683,12 +825,15 @@ export default function ProfilePage() {
       <div className="flex-1 pb-6 lg:pb-8">
           {activeTab === "personal" && (
             <PersonalInfoTab
-              user={MOCK_USER}
+              user={profileUser}
+              isLecturer={isLecturer}
               onGoToLevel={() => setActiveTab("level")}
+              updateUser={updateUser}
             />
           )}
           {activeTab === "security" && <SecurityTab />}
-          {activeTab === "level" && <LevelCorrectionTab user={MOCK_USER} />}
+          {activeTab === "level" && <LevelCorrectionTab user={profileUser} />}
+
         </div>
     </div>
   );

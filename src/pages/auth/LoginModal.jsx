@@ -5,30 +5,62 @@ import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { useModal, MODAL } from "../../context/ModalContext";
+import { useToast } from "../../context/ToastContext";
+import { getApiError, isGeneralError, getErrorStatus } from "../../utils/apiError";
 import logo from "../../assets/img/logo.png";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginModal() {
   const { login, status } = useAuth();
   const { closeModal, openModal } = useModal();
+  const { addToast } = useToast();
   const [form, setForm] = useState({ email: "", password: "" });
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setErrors((prev) => ({ ...prev, [e.target.name]: "" }));
   }
 
-  function handleSubmit(e) {
+  function validate() {
+    const errs = {};
+    if (!form.email.trim()) {
+      errs.email = "Email is required.";
+    } else if (!EMAIL_RE.test(form.email.trim())) {
+      errs.email = "Enter a valid email address.";
+    }
+    if (!form.password) {
+      errs.password = "Password is required.";
+    }
+    return errs;
+  }
+
+  async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    if (!form.email || !form.password) {
-      setError("Please fill in all fields.");
+    const errs = validate();
+    if (Object.keys(errs).length) {
+      setErrors(errs);
       return;
     }
-    login(form.email, form.password);
-    setTimeout(() => {
+    try {
+      const loggedInUser = await login(form.email.trim(), form.password);
+      const firstName = loggedInUser?.name?.split(" ")[0] ?? "back";
       closeModal();
-    }, 900);
+      addToast(`Welcome back, ${firstName}!`, "success");
+    } catch (err) {
+      const httpStatus = getErrorStatus(err);
+      if (httpStatus === 401) {
+        setErrors({ password: "Invalid email or password." });
+      } else if (httpStatus === 403) {
+        setErrors({ email: "Account not verified. Please check your email for the OTP." });
+      } else if (isGeneralError(err)) {
+        addToast(getApiError(err));
+      } else {
+        addToast(getApiError(err));
+      }
+    }
   }
 
   return (
@@ -73,12 +105,12 @@ export default function LoginModal() {
             </div>
           </div>
           <div className="absolute -left-20 -bottom-28 rotate-[20deg] opacity-10 pointer-events-none">
-                      <img
-                        src={logo}
-                        alt="NoticeHub Logo"
-                        className="w-64 h-64 brightness-0 invert"
-                      />
-                    </div>
+            <img
+              src={logo}
+              alt="NoticeHub Logo"
+              className="w-64 h-64 brightness-0 invert"
+            />
+          </div>
         </div>
 
         {/* Form panel */}
@@ -104,7 +136,6 @@ export default function LoginModal() {
             <h2 className="text-secondary text-xl md:text-3xl font-bold">
               Login
             </h2>
-
             <p className="text-neutral-gray-8 text-sm md:text-base mt-1.5">
               Enter your credentials to continue
             </p>
@@ -119,6 +150,7 @@ export default function LoginModal() {
               placeholder="Enter your email"
               value={form.email}
               onChange={handleChange}
+              error={errors.email}
               autoComplete="email"
             />
             <Input
@@ -129,6 +161,7 @@ export default function LoginModal() {
               placeholder="Enter your password"
               value={form.password}
               onChange={handleChange}
+              error={errors.password}
               autoComplete="current-password"
             />
             <div className="flex justify-between items-center">
@@ -151,7 +184,6 @@ export default function LoginModal() {
                 Forgot Password?
               </button>
             </div>
-            {error && <p className="text-sm text-error-7">{error}</p>}
           </div>
 
           <div className="flex flex-col gap-3">

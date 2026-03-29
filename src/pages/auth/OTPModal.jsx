@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react'
 import { Icon } from '@iconify/react'
 import Modal from '../../components/ui/Modal'
 import OTPInput from '../../components/ui/OTPInput'
-import { useAuth } from '../../hooks/useAuth'
+import { authService } from '../../services/auth.service'
 import { useModal, MODAL } from '../../context/ModalContext'
 
 export default function OTPModal() {
-  const { register } = useAuth()
   const { closeModal, openModal, modalData } = useModal()
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
@@ -15,31 +14,47 @@ export default function OTPModal() {
 
   useEffect(() => {
     if (seconds === 0) return
-    const t = setTimeout(() => setSeconds(s => s - 1), 1000)
+    const t = setTimeout(() => setSeconds((s) => s - 1), 1000)
     return () => clearTimeout(t)
   }, [seconds])
 
-  function submitCode() {
+  async function submitCode(otp) {
+    if (!modalData?.email) return
     setLoading(true)
     setError('')
-    setTimeout(() => {
-      if (modalData) {
-        register(modalData.name, modalData.email, modalData.password)
-      }
+    try {
+      await authService.verifyOtp(modalData.email, otp)
       setLoading(false)
       openModal(MODAL.SUCCESS)
-    }, 900)
+    } catch (err) {
+      setLoading(false)
+      setCode('')
+      const msg = err?.response?.data?.message
+      if (msg) {
+        setError(msg)
+      } else if (!err?.response) {
+        setError('Network error. Please check your connection.')
+      } else {
+        setError('Verification failed. Please try again.')
+      }
+    }
   }
 
   function handleOTPChange(val) {
     setCode(val)
-    if (val.length === 4) submitCode()
+    if (val.length === 4) submitCode(val)
   }
 
-  function handleResend() {
+  async function handleResend() {
     setCode('')
     setError('')
     setSeconds(60)
+    if (!modalData?.email) return
+    try {
+      await authService.resendOtp(modalData.email)
+    } catch {
+      // Silently ignore — the timer reset is enough UX feedback
+    }
   }
 
   return (
@@ -76,7 +91,7 @@ export default function OTPModal() {
               Verifying…
             </p>
           )}
-          {error && <p className="text-sm text-error-7 text-center">{error}</p>}
+          {error && <p className="text-sm text-error-8 text-center">{error}</p>}
         </div>
 
         <p className="text-sm text-center text-neutral-gray-8">

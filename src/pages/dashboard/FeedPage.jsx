@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { useNotices } from "../../hooks/useNotices";
+import { useAuth } from "../../hooks/useAuth";
 import Modal from "../../components/ui/Modal";
 import { matchesDate } from "../../utils/helpers";
 import { DATE_FILTERS } from "../../utils/noticeConstants";
@@ -88,8 +89,14 @@ function DateFilterDropdown({ value, onChange }) {
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
+function levelYear(level) {
+  const n = parseInt(level);
+  return n ? String(n / 100) : (level ?? '');
+}
+
 export default function FeedPage() {
-  const { notices, loading } = useNotices();
+  const { notices, loading, initialized } = useNotices();
+  const { user } = useAuth();
   const [activeFilter, setActiveFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("none");
   const [selectedNotice, setSelectedNotice] = useState(null);
@@ -113,6 +120,8 @@ export default function FeedPage() {
     if (dateFilter !== "none") {
       list = list.filter((n) => matchesDate(n.date, dateFilter));
     }
+    // When a date filter is active, respect strict date order without floating pinned items
+    if (dateFilter !== "none") return list;
     return [...list].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
   }, [notices, activeFilter, searchQuery, dateFilter]);
 
@@ -137,15 +146,30 @@ export default function FeedPage() {
             </p>
           </div>
 
-          <div className="inline-flex items-center gap-2 lg:gap-2.5 px-2.5 py-1.5 rounded-xl outline-1 outline-primary self-start">
-            <Icon
-              icon="iconoir:graduation-cap"
-              className="w-4 h-4 lg:w-5 lg:h-5 text-primary"
-            />
-            <span className="text-primary text-xs lg:text-sm font-medium">
-              Bsc. Computer Science 3
-            </span>
-          </div>
+          {user?.role === 'lecturer' ? (
+            <div className="flex flex-wrap gap-2">
+              {(user.courses ?? []).length > 0 ? (
+                user.courses.map((c) => (
+                  <div key={c.id} className="inline-flex items-center gap-2 lg:gap-2.5 px-2.5 py-1.5 rounded-xl outline-1 outline-primary self-start">
+                    <Icon icon="mdi:book-open-outline" className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
+                    <span className="text-primary text-xs lg:text-sm font-medium">{c.code} — {c.name}</span>
+                  </div>
+                ))
+              ) : (
+                <div className="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-xl outline-1 outline-neutral-gray-4 self-start">
+                  <Icon icon="mdi:book-open-outline" className="w-4 h-4 text-neutral-gray-5" />
+                  <span className="text-neutral-gray-5 text-xs lg:text-sm">No courses assigned yet</span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="inline-flex items-center gap-2 lg:gap-2.5 px-2.5 py-1.5 rounded-xl outline-1 outline-primary self-start">
+              <Icon icon="iconoir:graduation-cap" className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
+              <span className="text-primary text-xs lg:text-sm font-medium">
+                {user?.program ?? 'Your Program'} {levelYear(user?.level)}
+              </span>
+            </div>
+          )}
 
           {/* Filter pills */}
           <FilterPills filters={FILTERS} active={activeFilter} onChange={setActiveFilter} />
@@ -193,7 +217,7 @@ export default function FeedPage() {
             <DateFilterDropdown value={dateFilter} onChange={setDateFilter} />
           </div>
           <div className="relative z-0 flex flex-col gap-2 lg:gap-2.5 lg:overflow-y-auto scrollbar-hide">
-            {loading ? (
+            {!initialized || loading ? (
               [1, 2, 3].map((i) => (
                 <div
                   key={i}

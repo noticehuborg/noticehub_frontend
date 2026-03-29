@@ -1,13 +1,33 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import Modal from "../../components/ui/Modal";
 import Button from "../../components/ui/Button";
 import Input from "../../components/ui/Input";
 import { initials, timeAgo, isRecent, matchesDate, splitFilename } from "../../utils/helpers";
-import { CATEGORY, ATTACH_ICONS, DATE_FILTERS } from "../../utils/noticeConstants";
+import { CATEGORY, DATE_FILTERS, getAttachIcon } from "../../utils/noticeConstants";
 import CountdownBadge from "../../components/dashboard/CountdownBadge";
 import FilterPills from "../../components/dashboard/FilterPills";
 import readingIllustration from "../../assets/svg/Reading a letter-pana.svg";
+import { postsService } from "../../services/posts.service";
+import { normalizeNotice } from "../../services/notices.service";
+import { commentsService } from "../../services/comments.service";
+import { useAuth } from "../../hooks/useAuth";
+import { useNotices } from "../../hooks/useNotices";
+import CommentBubble from "../../components/dashboard/CommentBubble";
+import LinkCard from "../../components/dashboard/LinkCard";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const ROLE_MAP = { student: "Student", course_rep: "Course Rep", lecturer: "Lecturer", admin: "Admin" };
+function normalizeComment(c) {
+  return {
+    id: c.id,
+    body: c.body,
+    author: c.author?.full_name ?? "Unknown",
+    authorRole: ROLE_MAP[c.author?.role] ?? "",
+    date: c.createdAt ?? c.created_at ?? null,
+    replies: (c.replies ?? []).map(normalizeComment),
+  };
+}
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const FILTERS = [
@@ -17,105 +37,6 @@ const FILTERS = [
   { value: "pinned", label: "Pinned" },
 ];
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const MOCK_POSTS = [
-  {
-    id: 1,
-    type: "general",
-    status: "published",
-    pinned: false,
-    title: "Updated Class Schedule – Network Security",
-    body: "The Network Security class originally on Wednesday has moved to Thursday at 10:00 AM. Venue unchanged (Lab 3).",
-    date: "2025-02-28T08:00:00",
-    author: "Eliah Abormegah",
-    authorRole: "Course Rep",
-    commentCount: 18,
-    attachments: [],
-    links: [],
-    comments: [],
-    editedAt: null,
-  },
-  {
-    id: 2,
-    type: "exam",
-    status: "draft",
-    pinned: false,
-    title: "CSM 342 – Networking Fundamentals Mid-Semester Exam",
-    body: "Mid-semester examination covering Weeks 1–7. Multiple choice and short answer sections.",
-    date: "2025-02-23T10:00:00",
-    author: "Eliah Abormegah",
-    authorRole: "Course Rep",
-    commentCount: 7,
-    attachments: [],
-    links: [],
-    comments: [],
-    editedAt: null,
-  },
-  {
-    id: 3,
-    type: "general",
-    status: "published",
-    pinned: true,
-    title: "Updated Class Schedule – Network Security",
-    body: "The Network Security class originally on Wednesday has moved to Thursday at 10:00 AM. Venue unchanged (Lab 3).",
-    date: "2025-02-28T08:00:00",
-    author: "Eliah Abormegah",
-    authorRole: "Course Rep",
-    commentCount: 18,
-    attachments: [],
-    links: [],
-    comments: [],
-    editedAt: null,
-  },
-  {
-    id: 4,
-    type: "assignment",
-    status: "draft",
-    pinned: true,
-    title: "CSM 395 – Data Structures Assignment #3",
-    body: "Submit your implementation of AVL trees with full rotation logic. Must include test cases.",
-    date: new Date(Date.now() - 2 * 3600000).toISOString(),
-    author: "Eliah Abormegah",
-    authorRole: "Course Rep",
-    commentCount: 7,
-    attachments: [],
-    links: [],
-    comments: [],
-    editedAt: null,
-  },
-  {
-    id: 5,
-    type: "exam",
-    status: "published",
-    pinned: true,
-    title: "CSM 342 – Networking Fundamentals Mid-Semester Exam",
-    body: "Mid-semester examination covering Weeks 1–7. Multiple choice and short answer sections.",
-    date: "2025-02-23T10:00:00",
-    author: "Eliah Abormegah",
-    authorRole: "Course Rep",
-    commentCount: 7,
-    attachments: [],
-    links: [],
-    comments: [],
-    editedAt: null,
-  },
-  {
-    id: 6,
-    type: "assignment",
-    status: "published",
-    pinned: true,
-    title: "CSM 395 – Data Structures Assignment #3",
-    body: "Submit your implementation of AVL trees with full rotation logic. Must include test cases.",
-    date: new Date(Date.now() - 2 * 3600000).toISOString(),
-    author: "Eliah Abormegah",
-    authorRole: "Course Rep",
-    commentCount: 7,
-    attachments: [],
-    links: [],
-    comments: [],
-    editedAt: null,
-  },
-];
 
 // ─── Status badge ─────────────────────────────────────────────────────────────
 function StatusBadge({ status, pinned }) {
@@ -266,46 +187,90 @@ function PostCard({ post, isSelected, onClick, onEdit, onDelete }) {
 }
 
 // ─── Link card ────────────────────────────────────────────────────────────────
-function LinkCard({ lnk }) {
-  const [copied, setCopied] = useState(false);
-  function handleCopy(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    navigator.clipboard.writeText(lnk.url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  }
-  return (
-    <a
-      href={lnk.url}
-      target="_blank"
-      rel="noreferrer"
-      className="w-full md:w-[250px] relative bg-zinc-100 rounded-xl px-4 py-2.5 overflow-hidden flex flex-col gap-0.5 hover:bg-neutral-gray-3 transition-colors group"
-    >
-      <p className="text-xs font-medium text-secondary leading-5 pr-8 max-w-[88%] w-full truncate">
-        {lnk.label || lnk.desc}
-      </p>
-      <p className="text-xs text-neutral-gray-6 truncate pr-8">{lnk.url}</p>
-      <button
-        onClick={handleCopy}
-        title={copied ? "Copied!" : "Copy URL"}
-        className="cursor-pointer absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.20)] flex items-center justify-center hover:bg-neutral-gray-2 transition-colors shrink-0"
-      >
-        <Icon
-          icon={copied ? "mdi:check" : "solar:copy-linear"}
-          className={`w-3.5 h-3.5 transition-colors ${copied ? "text-green-600" : "text-neutral-gray-7"}`}
-        />
-      </button>
-    </a>
-  );
-}
+// function LinkCard({ lnk }) {
+//   const [copied, setCopied] = useState(false);
+//   function handleCopy(e) {
+//     e.preventDefault();
+//     e.stopPropagation();
+//     navigator.clipboard.writeText(lnk.url).then(() => {
+//       setCopied(true);
+//       setTimeout(() => setCopied(false), 1500);
+//     });
+//   }
+//   return (
+//     <a
+//       href={lnk.url}
+//       target="_blank"
+//       rel="noreferrer"
+//       className="w-full md:w-[250px] relative bg-zinc-100 rounded-xl px-4 py-2.5 overflow-hidden flex flex-col gap-0.5 hover:bg-neutral-gray-3 transition-colors group"
+//     >
+//       <p className="text-xs font-medium text-secondary leading-5 pr-8 max-w-[88%] w-full truncate">
+//         {lnk.label || lnk.desc}
+//       </p>
+//       <p className="text-xs text-neutral-gray-6 truncate pr-8">{lnk.url}</p>
+//       <button
+//         onClick={handleCopy}
+//         title={copied ? "Copied!" : "Copy URL"}
+//         className="cursor-pointer absolute top-2 right-2 w-7 h-7 bg-white rounded-full shadow-[0px_1px_2px_0px_rgba(0,0,0,0.20)] flex items-center justify-center hover:bg-neutral-gray-2 transition-colors shrink-0"
+//       >
+//         <Icon
+//           icon={copied ? "mdi:check" : "solar:copy-linear"}
+//           className={`w-3.5 h-3.5 transition-colors ${copied ? "text-green-600" : "text-neutral-gray-7"}`}
+//         />
+//       </button>
+//     </a>
+//   );
+// }
 
 // ─── Post preview panel ───────────────────────────────────────────────────────
-function PostPreview({ post, inModal = false, createMode = false, onEdit, onDelete }) {
+function PostPreview({ post, inModal = false, createMode = false, onEdit, onDelete, onPublishDraft }) {
+  const { user } = useAuth();
+  const [comments, setComments] = useState([]);
+  const [commentCount, setCommentCount] = useState(0);
   const [commentInput, setCommentInput] = useState("");
+  const [replyingTo, setReplyingTo] = useState(null);
+  const [replyInput, setReplyInput] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const cat = post ? CATEGORY[post.type] || CATEGORY.general : null;
+
+  const fetchComments = useCallback(async (id) => {
+    try {
+      const { data } = await commentsService.getByNotice(id);
+      setComments((data?.data ?? []).map(normalizeComment));
+    } catch { setComments([]); }
+  }, []);
+
+  useEffect(() => {
+    if (!post?.id || createMode) { setComments([]); setCommentCount(0); return; }
+    setCommentCount(post.commentCount ?? 0);
+    setCommentInput(""); setReplyingTo(null); setReplyInput("");
+    fetchComments(post.id);
+  }, [post?.id, createMode, fetchComments]);
+
+  async function handleCommentSubmit() {
+    if (!commentInput.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await commentsService.create(post.id, { body: commentInput.trim() });
+      setCommentInput("");
+      setCommentCount((n) => n + 1);
+      fetchComments(post.id);
+    } catch { } finally { setSubmitting(false); }
+  }
+
+  async function handleReplySubmit(parentId) {
+    if (!replyInput.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await commentsService.create(post.id, { body: replyInput.trim(), parentId });
+      setReplyInput(""); setReplyingTo(null);
+      setCommentCount((n) => n + 1);
+      fetchComments(post.id);
+    } catch { } finally { setSubmitting(false); }
+  }
+
+  function handleReply(id) { setReplyingTo(id); setReplyInput(""); }
 
   if (!post || (!post.title && !createMode)) {
     return (
@@ -331,7 +296,6 @@ function PostPreview({ post, inModal = false, createMode = false, onEdit, onDele
 
   const hasAttachments = post.attachments?.length > 0;
   const hasLinks = post.links?.length > 0;
-  const hasComments = post.comments?.length > 0;
 
   const contentCls = inModal
     ? "overflow-y-auto scrollbar-hide px-5 pt-6 pb-4 flex flex-col gap-5 max-h-[calc(85vh-5rem)]"
@@ -370,7 +334,16 @@ function PostPreview({ post, inModal = false, createMode = false, onEdit, onDele
                 {timeAgo(post.date)}
               </span>
               {!createMode && (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
+                  {post.status === "draft" && onPublishDraft && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onPublishDraft(post.id); }}
+                      title="Publish this draft"
+                      className="cursor-pointer flex items-center gap-1 px-3 py-1.5 rounded-[10px] bg-primary text-white text-xs font-medium hover:bg-primary/90 transition-colors"
+                    >
+                      Publish
+                    </button>
+                  )}
                   <button
                     onClick={(e) => { e.stopPropagation(); onEdit?.(post); }}
                     title="Edit post"
@@ -436,7 +409,7 @@ function PostPreview({ post, inModal = false, createMode = false, onEdit, onDele
                   icon="iconamoon:comment"
                   className="w-3.5 h-3.5 md:w-4 md:h-4"
                 />
-                {post.commentCount ?? 0}
+                {commentCount}
               </span>
             </div>
           </div>
@@ -464,13 +437,13 @@ function PostPreview({ post, inModal = false, createMode = false, onEdit, onDele
             </p>
             <div className="flex flex-row flex-wrap gap-2">
               {post.attachments.map((att) => {
-                const ai = ATTACH_ICONS[att.type] || {
-                  icon: "mdi:file-document-outline",
-                };
+                const ai = getAttachIcon(att.type);
                 return (
                   <a
                     key={att.id}
-                    href="#"
+                    href={att.url || "#"}
+                    target="_blank"
+                    rel="noreferrer"
                     className="relative w-full md:w-[250px] h-14 pl-2 py-2 bg-zinc-100 rounded-[10px] border border-neutral-gray-3 flex justify-between items-center gap-1.5 hover:bg-neutral-gray-3 transition-colors"
                   >
                     <div className="flex items-center gap-1.5 w-full">
@@ -528,18 +501,21 @@ function PostPreview({ post, inModal = false, createMode = false, onEdit, onDele
                 className="w-3.5 h-3.5 md:w-4 md:h-4"
               />
               <p className="text-xs md:text-sm font-medium">
-                Comments ({post.commentCount ?? 0})
+                Comments ({commentCount})
               </p>
             </div>
-            {hasComments ? (
+            {comments.length > 0 ? (
               <div className="flex flex-col gap-4">
-                {post.comments.map((c) => (
-                  <div
+                {comments.map((c) => (
+                  <CommentBubble
                     key={c.id}
-                    className="px-4 py-3 bg-neutral-100 rounded-2xl text-xs text-neutral-gray-7"
-                  >
-                    {c.body}
-                  </div>
+                    comment={c}
+                    replyingTo={replyingTo}
+                    onReply={handleReply}
+                    replyInput={replyInput}
+                    onReplyInputChange={setReplyInput}
+                    onReplySubmit={handleReplySubmit}
+                  />
                 ))}
               </div>
             ) : (
@@ -589,17 +565,19 @@ function PostPreview({ post, inModal = false, createMode = false, onEdit, onDele
           className={`shrink-0 flex items-center gap-2 border-t border-neutral-gray-3 ${inModal ? "px-5 py-3" : "px-8 py-4"}`}
         >
           <div className="w-7 h-7 rounded-full bg-blue-1 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-            Y
+            {initials(user?.name ?? "?")}
           </div>
           <div className="flex-1 flex items-center gap-2 px-3.5 py-2 rounded-full outline outline-1 outline-neutral-gray-4 focus-within:outline-primary transition-colors">
             <input
               value={commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && commentInput.trim()) handleCommentSubmit(); }}
               placeholder="Add a comment…"
               className="flex-1 bg-transparent text-xs text-neutral-gray-9 placeholder:text-neutral-gray-5 outline-none min-w-0"
             />
             <button
-              disabled={!commentInput.trim()}
+              onClick={handleCommentSubmit}
+              disabled={!commentInput.trim() || submitting}
               className="shrink-0 disabled:opacity-40"
             >
               <Icon icon="mdi:send" className="w-4 h-4 text-primary" />
@@ -685,6 +663,10 @@ const FORM_CATEGORIES = [
 
 function CreateAnnouncementForm({
   editMode = false,
+  isLecturer = false,
+  courses = [],
+  courseId,
+  setCourseId,
   category,
   setCategory,
   title,
@@ -697,10 +679,30 @@ function CreateAnnouncementForm({
   setPinned,
   links,
   setLinks,
+  formFiles = [],
+  setFormFiles,
+  existingAttachments = [],
+  onRemoveExistingAttachment,
   onPublish,
   onSaveDraft,
   onCancel,
 }) {
+  const fileInputRef = useRef(null);
+
+  function handleFilesChange(newFiles) {
+    const list = Array.from(newFiles);
+    setFormFiles((prev) => [...prev, ...list]);
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    if (e.dataTransfer.files?.length) handleFilesChange(e.dataTransfer.files);
+  }
+
+  function removeFile(idx) {
+    setFormFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   function addLink() {
     setLinks((prev) => [...prev, { id: Date.now(), desc: "", url: "" }]);
   }
@@ -738,6 +740,38 @@ function CreateAnnouncementForm({
 
       {/* scrollable Content*/}
       <div className="flex flex-1 flex-col gap-6 overflow-y-auto overflow-hidden scrollbar-hide pb-6">
+        {/* Course selector — lecturers only */}
+        {isLecturer && (
+          <div className="flex flex-col gap-3">
+            <p className="text-base font-medium text-secondary">
+              Target Course <span className="text-error-7">*</span>
+            </p>
+            {courses.length === 0 ? (
+              <p className="text-sm text-neutral-gray-5 italic">
+                You have no courses assigned. Contact an admin to get courses added to your profile.
+              </p>
+            ) : (
+              <div className="flex items-center gap-2 flex-wrap">
+                {courses.map((c) => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCourseId(c.id)}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border flex items-center gap-1.5
+                      ${courseId === c.id
+                        ? "bg-primary text-blue-1 border-primary"
+                        : "border-neutral-gray-6 text-neutral-gray-6 hover:bg-neutral-gray-2"
+                      }`}
+                  >
+                    <span className="font-semibold">{c.code}</span>
+                    <span className="hidden sm:inline">— {c.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Category */}
         <div className="flex flex-col gap-3">
           <p className="text-base font-medium text-secondary">Category</p>
@@ -801,25 +835,70 @@ function CreateAnnouncementForm({
         {/* Attachments */}
         <div className="flex flex-col gap-3">
           <p className="text-base font-medium text-secondary">Attachments</p>
+          {/* Existing attachments (edit mode) */}
+          {editMode && existingAttachments.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              <p className="text-xs text-neutral-gray-5 font-medium">Current attachments:</p>
+              {existingAttachments.map((att) => (
+                <div key={att.id} className="flex items-center gap-2 px-3 py-2 bg-blue-1/60 rounded-xl border border-blue-3/40">
+                  <Icon icon="mdi:file-document-outline" className="w-4 h-4 text-primary shrink-0" />
+                  <span className="flex-1 text-xs text-neutral-gray-8 truncate">{att.name}</span>
+                  <span className="text-xs text-neutral-gray-5 shrink-0">{att.size}</span>
+                  <button
+                    type="button"
+                    onClick={() => onRemoveExistingAttachment?.(att.id)}
+                    title="Remove attachment"
+                    className="shrink-0 text-neutral-gray-4 hover:text-error-7 transition-colors"
+                  >
+                    <Icon icon="mdi:close" className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
+            className="hidden"
+            onChange={(e) => { if (e.target.files?.length) handleFilesChange(e.target.files); e.target.value = ""; }}
+          />
           <div
+            onClick={() => fileInputRef.current?.click()}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={handleDrop}
             className="px-4 py-6 bg-zinc-100 rounded-2xl flex justify-center items-center cursor-pointer hover:bg-zinc-200 transition-colors"
             style={{
               backgroundImage: `url("data:image/svg+xml,%3csvg width='100%25' height='100%25' xmlns='http://www.w3.org/2000/svg'%3e%3crect width='100%25' height='100%25' fill='none' rx='16' ry='16' stroke='%23a1a1aa' stroke-width='2.2' stroke-dasharray='5%2c 12' stroke-linecap='square'/%3e%3c/svg%3e")`,
             }}
           >
             <div className="flex flex-col items-center gap-2">
-              <Icon
-                icon="lucide:upload"
-                className="w-8 h-8 text-neutral-gray-8"
-              />
+              <Icon icon="lucide:upload" className="w-8 h-8 text-neutral-gray-8" />
               <p className="text-sm text-neutral-gray-8 text-center">
                 Drag and drop files here, or click to browse
               </p>
-              <p className="text-xs text-neutral-gray-6">
-                PDF, DOC, DOCX up to 10MB
-              </p>
+              <p className="text-xs text-neutral-gray-6">PDF, DOC, DOCX, images up to 10MB</p>
             </div>
           </div>
+          {formFiles.length > 0 && (
+            <div className="flex flex-col gap-1.5">
+              {formFiles.map((file, idx) => (
+                <div key={idx} className="flex items-center gap-2 px-3 py-2 bg-zinc-100 rounded-xl">
+                  <Icon icon="mdi:file-document-outline" className="w-4 h-4 text-neutral-gray-6 shrink-0" />
+                  <span className="flex-1 text-xs text-neutral-gray-8 truncate">{file.name}</span>
+                  <span className="text-xs text-neutral-gray-5 shrink-0">{(file.size / 1024).toFixed(0)} KB</span>
+                  <button
+                    type="button"
+                    onClick={() => removeFile(idx)}
+                    className="shrink-0 text-neutral-gray-4 hover:text-error-7 transition-colors"
+                  >
+                    <Icon icon="mdi:close" className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Related Links */}
@@ -908,10 +987,30 @@ function CreateAnnouncementForm({
   );
 }
 
+// Maps backend announcement → MyPostsPage shape
+function normalizePost(a) {
+  const n = normalizeNotice(a);
+  const isEdited = n.publishedAt && n.updatedAt && n.updatedAt > n.publishedAt;
+  return {
+    ...n,
+    // Show the edit time as date so edited posts display "Just now" etc.
+    date: isEdited ? n.updatedAt : n.createdAt,
+    editedAt: isEdited ? n.updatedAt : null,
+    pinned: n.is_pinned ?? false,
+    commentCount: n.commentCount,
+    links: n.links ?? [],        // n.links already has id field added
+    dueDate: n.dueDate ?? null,
+    comments: [],
+    courseId: a.course_id ?? null,
+  };
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function MyPostsPage() {
+  const { user } = useAuth();
   // List state
-  const [posts, setPosts] = useState(MOCK_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("none");
   const [selectedPost, setSelectedPost] = useState(null);
@@ -927,6 +1026,30 @@ export default function MyPostsPage() {
   const [formDueDate, setFormDueDate] = useState("");
   const [formPinned, setFormPinned] = useState(false);
   const [formLinks, setFormLinks] = useState([]);
+  const [formCourseId, setFormCourseId] = useState("");
+  const [formFiles, setFormFiles] = useState([]);
+
+  const { refetch: refetchFeed } = useNotices();
+  const isLecturer = user?.role === 'lecturer';
+  const lecturerCourses = user?.courses ?? [];
+
+  // Track existing attachments when editing (to display them and allow removal)
+  const [existingAttachments, setExistingAttachments] = useState([]);
+  const [removeAttachmentIds, setRemoveAttachmentIds] = useState([]);
+
+  const fetchPosts = useCallback(async () => {
+    setPostsLoading(true);
+    try {
+      const { data } = await postsService.getMyPosts();
+      setPosts((data?.data?.announcements ?? []).map(normalizePost));
+    } catch {
+      // leave empty on error
+    } finally {
+      setPostsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchPosts(); }, [fetchPosts]);
 
   function resetForm() {
     setFormCategory("general");
@@ -935,6 +1058,8 @@ export default function MyPostsPage() {
     setFormDueDate("");
     setFormPinned(false);
     setFormLinks([]);
+    setFormCourseId(lecturerCourses[0]?.id ?? "");
+    setFormFiles([]);
   }
 
   function handleCreateNew() {
@@ -950,90 +1075,128 @@ export default function MyPostsPage() {
     setFormDueDate(post.dueDate ? post.dueDate.slice(0, 10) : "");
     setFormPinned(post.pinned);
     setFormLinks(post.links?.length ? post.links : []);
+    // Pre-select the course this post was originally targeting (if lecturer)
+    setFormCourseId(post.courseId ?? lecturerCourses[0]?.id ?? "");
+    setFormFiles([]);
+    // Store current attachments so they can be shown and optionally removed
+    setExistingAttachments(post.attachments ?? []);
+    setRemoveAttachmentIds([]);
     setEditing(post);
     setCreating(true);
   }
 
-  function handleDeletePost(id) {
+  async function handleDeletePost(id) {
     setPosts((prev) => prev.filter((p) => p.id !== id));
     if (selectedPost?.id === id) setSelectedPost(null);
+    try {
+      await postsService.delete(id);
+    } catch {
+      fetchPosts();
+    }
   }
 
-  function handlePublish() {
-    if (editing) {
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === editing.id
-            ? {
-                ...p,
-                type: formCategory,
-                title: formTitle,
-                body: formBody,
-                pinned: formPinned,
-                links: formLinks.filter((l) => l.url.trim()),
-                dueDate: formDueDate
-                  ? new Date(formDueDate + "T23:59:00").toISOString()
-                  : null,
-                status: "published",
-                editedAt: new Date().toISOString(),
-              }
-            : p,
-        ),
-      );
+  async function handlePublishDraft(id) {
+    try {
+      await postsService.publish(id);
+      fetchPosts();
       setSelectedPost(null);
-    }
+    } catch { /* ignore */ }
+  }
+
+  function buildFormData(status) {
+    const formData = new FormData();
+    formData.append('title', formTitle);
+    formData.append('body', formBody);
+    // Backend ENUM uses 'exams' (plural); frontend uses 'exam' — remap on send
+    formData.append('category', formCategory === 'exam' ? 'exams' : formCategory);
+    formData.append('status', status);
+    if (formDueDate) formData.append('deadline', new Date(formDueDate + 'T23:59:00').toISOString());
+    formData.append('useful_links', JSON.stringify(
+      formLinks.filter((l) => l.url.trim()).map(({ desc, url }) => ({ desc, url }))
+    ));
+    if (isLecturer && formCourseId) formData.append('course_id', formCourseId);
+    formFiles.forEach((file) => formData.append('attachments', file));
+    // Tell backend which existing attachments to remove
+    removeAttachmentIds.forEach((id) => formData.append('remove_attachment_ids', id));
+    return formData;
+  }
+
+  async function handlePublish() {
+    try {
+      if (editing) {
+        await postsService.update(editing.id, buildFormData('published'));
+        if (formPinned !== editing.pinned) await postsService.togglePin(editing.id);
+      } else {
+        const { data } = await postsService.create(buildFormData('published'));
+        if (formPinned && data?.data?.id) await postsService.togglePin(data.data.id);
+      }
+    } catch { /* ignore */ }
+    fetchPosts();
+    refetchFeed(); // sync to the main feed
+    setSelectedPost(null);
     setEditing(null);
     setCreating(false);
+    setExistingAttachments([]);
+    setRemoveAttachmentIds([]);
   }
 
-  function handleSaveDraft() {
-    if (editing) {
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === editing.id
-            ? {
-                ...p,
-                type: formCategory,
-                title: formTitle,
-                body: formBody,
-                pinned: formPinned,
-                links: formLinks.filter((l) => l.url.trim()),
-                dueDate: formDueDate
-                  ? new Date(formDueDate + "T23:59:00").toISOString()
-                  : null,
-                status: "draft",
-                editedAt: new Date().toISOString(),
-              }
-            : p,
-        ),
-      );
-      setSelectedPost(null);
-    }
+  async function handleSaveDraft() {
+    try {
+      if (editing) {
+        await postsService.update(editing.id, buildFormData('draft'));
+        if (formPinned !== editing.pinned) await postsService.togglePin(editing.id);
+      } else {
+        await postsService.create(buildFormData('draft'));
+      }
+    } catch { /* ignore */ }
+    fetchPosts();
+    refetchFeed(); // sync to the main feed (drafts won't show in feed, but published edits will)
+    setSelectedPost(null);
     setEditing(null);
     setCreating(false);
+    setExistingAttachments([]);
+    setRemoveAttachmentIds([]);
   }
 
-  // Live preview post built from form state
+  // Role display map for preview
+  const ROLE_DISPLAY = { student: "Student", course_rep: "Course Rep", lecturer: "Lecturer", admin: "Admin" };
+
+  // Live preview post built from form state (including files and existing attachments)
   const draftPreview = useMemo(
     () => ({
       id: "draft",
       type: formCategory,
-      status: "draft",
+      status: editing ? editing.status : "draft",
       pinned: formPinned,
       title: formTitle,
       body: formBody,
       date: new Date().toISOString(),
-      author: "Eliah Abormegah",
-      authorRole: "Course Rep",
-      commentCount: 0,
-      attachments: [],
-      links: formLinks.filter((l) => l.url.trim()),
+      editedAt: editing ? new Date().toISOString() : null,
+      author: user?.name ?? "",
+      authorRole: ROLE_DISPLAY[user?.role] ?? user?.role ?? "Course Rep",
+      commentCount: editing?.commentCount ?? 0,
+      // Existing attachments (minus any removed) + newly added local files
+      attachments: [
+        ...(editing
+          ? existingAttachments.filter((a) => !removeAttachmentIds.includes(a.id))
+          : []
+        ),
+        ...formFiles.map((f, i) => ({
+          id: `new-${i}`,
+          name: f.name,
+          size: `${(f.size / 1024).toFixed(0)} KB`,
+          type: f.type,
+          url: null, // not uploaded yet
+        })),
+      ],
+      links: formLinks.filter((l) => l.url.trim()).map((l, i) => ({ ...l, id: l.id ?? i })),
       comments: [],
       dueDate: formDueDate
         ? new Date(formDueDate + "T23:59:00").toISOString()
         : null,
     }),
-    [formCategory, formTitle, formBody, formDueDate, formPinned, formLinks],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [formCategory, formTitle, formBody, formDueDate, formPinned, formLinks, formFiles, editing, existingAttachments, removeAttachmentIds, user],
   );
 
   // Filtered list
@@ -1074,6 +1237,10 @@ export default function MyPostsPage() {
           >
             <CreateAnnouncementForm
               editMode={editing !== null}
+              isLecturer={isLecturer}
+              courses={lecturerCourses}
+              courseId={formCourseId}
+              setCourseId={setFormCourseId}
               category={formCategory}
               setCategory={setFormCategory}
               title={formTitle}
@@ -1086,9 +1253,25 @@ export default function MyPostsPage() {
               setPinned={setFormPinned}
               links={formLinks}
               setLinks={setFormLinks}
+              formFiles={formFiles}
+              existingAttachments={existingAttachments}
+              onRemoveExistingAttachment={(id) => {
+                setExistingAttachments((prev) => prev.filter((a) => a.id !== id));
+                setRemoveAttachmentIds((prev) => [...prev, id]);
+              }}
+              setFormFiles={setFormFiles}
               onPublish={handlePublish}
               onSaveDraft={handleSaveDraft}
-              onCancel={() => { setEditing(null); setCreating(false); }}
+              onCancel={async () => {
+                const hasContent = formTitle.trim() || formBody.trim();
+                if (hasContent || editing) {
+                  // Auto-save as draft before leaving
+                  await handleSaveDraft();
+                } else {
+                  setEditing(null);
+                  setCreating(false);
+                }
+              }}
             />
           </div>
         ) : (
@@ -1166,7 +1349,11 @@ export default function MyPostsPage() {
               </div>
 
               <div className="relative z-0 flex flex-col gap-2 lg:gap-2.5 lg:overflow-y-auto scrollbar-hide">
-                {filtered.length === 0 ? (
+                {postsLoading ? (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="h-24 lg:h-32 rounded-2xl bg-neutral-gray-2 animate-pulse" />
+                  ))
+                ) : filtered.length === 0 ? (
                   <div className="flex flex-col items-center gap-3 py-12 lg:py-16 text-center">
                     <Icon
                       icon="iconoir:info-empty"
@@ -1208,7 +1395,7 @@ export default function MyPostsPage() {
         {creating ? (
           <PostPreview post={draftPreview} createMode />
         ) : (
-          <PostPreview post={selectedPost} onEdit={handleEditPost} onDelete={handleDeletePost} />
+          <PostPreview post={selectedPost} onEdit={handleEditPost} onDelete={handleDeletePost} onPublishDraft={handlePublishDraft} />
         )}
       </div>
 
@@ -1220,7 +1407,7 @@ export default function MyPostsPage() {
           className="md:max-w-xl overflow-hidden !p-0"
           portalClassName="lg:hidden p-0! items-end md:items-center md:p-6!"
         >
-          <PostPreview post={selectedPost} inModal onEdit={handleEditPost} onDelete={handleDeletePost} />
+          <PostPreview post={selectedPost} inModal onEdit={handleEditPost} onDelete={handleDeletePost} onPublishDraft={handlePublishDraft} />
         </Modal>
       )}
     </div>

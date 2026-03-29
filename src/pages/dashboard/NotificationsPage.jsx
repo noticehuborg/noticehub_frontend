@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import Button from "../../components/ui/Button";
 import FilterPills from "../../components/dashboard/FilterPills";
+import { notificationsService, normalizeNotification } from "../../services/notifications.service";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const FILTERS = [
@@ -16,38 +17,6 @@ const NOTIF_ICONS = {
   info: { icon: "iconoir:info-empty", color: "text-secondary" },
 };
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
-const MOCK_NOTIFS = [
-  {
-    id: 1,
-    type: "deadline",
-    title: "CS 301 Final Exam deadline is approaching (6 days left)",
-    time: new Date(Date.now() - 30 * 60000).toISOString(),
-    read: false,
-  },
-  {
-    id: 2,
-    type: "comment",
-    title:
-      "Dr. Kofi Mensah replied to your comment on Software Engineering Project",
-    time: new Date(Date.now() - 2 * 3600000).toISOString(),
-    read: false,
-  },
-  {
-    id: 3,
-    type: "notice",
-    title: "New announcement: Guest Lecture on Machine Learning",
-    time: new Date(Date.now() - 24 * 3600000).toISOString(),
-    read: true,
-  },
-  {
-    id: 4,
-    type: "info",
-    title: "Welcome to NoticeHub! Complete your profile to get started.",
-    time: new Date(Date.now() - 3 * 24 * 3600000).toISOString(),
-    read: true,
-  },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function timeAgo(dateString) {
@@ -64,31 +33,32 @@ function timeAgo(dateString) {
 // ─── Notification item ────────────────────────────────────────────────────────
 function NotifItem({ notif, onRead }) {
   const ni = NOTIF_ICONS[notif.type] || NOTIF_ICONS.info;
+  const isRead = notif.is_read;
   return (
     <div
       onClick={() => onRead(notif.id)}
       className={`relative w-full px-4 lg:px-6 py-4 lg:py-5 rounded-2xl flex items-start gap-3 lg:gap-4 cursor-pointer transition-colors
         ${
-          notif.read
+          isRead
             ? "bg-white shadow-[0px_1px_2px_-1px_rgba(0,0,0,0.10),0px_1px_3px_0px_rgba(0,0,0,0.10)] hover:bg-neutral-gray-2"
             : "bg-white shadow-[0px_1px_2px_-1px_rgba(0,0,0,0.10),0px_1px_3px_0px_rgba(0,0,0,0.10)] border-l-4 border-primary hover:bg-blue-1/30"
         }`}
     >
       <Icon
         icon={ni.icon}
-        className={`w-5 h-5 shrink-0 mt-0.5 ${notif.read ? "text-secondary" : "text-primary"}`}
+        className={`w-5 h-5 shrink-0 mt-0.5 ${isRead ? "text-secondary" : "text-primary"}`}
       />
       <div className="flex flex-col gap-1 flex-1 min-w-0">
         <p
-          className={`text-sm lg:text-base leading-6 ${notif.read ? "font-normal text-secondary" : "font-medium text-secondary"}`}
+          className={`text-sm lg:text-base leading-6 ${isRead ? "font-normal text-secondary" : "font-medium text-secondary"}`}
         >
           {notif.title}
         </p>
         <p className="text-xs lg:text-sm text-neutral-gray-8">
-          {timeAgo(notif.time)}
+          {timeAgo(notif.createdAt)}
         </p>
       </div>
-      {!notif.read && (
+      {!isRead && (
         <span className="shrink-0 w-2.5 h-2.5 rounded-full bg-primary mt-1" />
       )}
     </div>
@@ -99,21 +69,46 @@ function NotifItem({ notif, onRead }) {
 export default function NotificationsPage() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  const [notifs, setNotifs] = useState(MOCK_NOTIFS);
+  const [notifs, setNotifs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  function markAllRead() {
-    setNotifs((prev) => prev.map((n) => ({ ...n, read: true })));
+  const fetchNotifs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data } = await notificationsService.getAll();
+      setNotifs((data?.data?.notifications ?? []).map(normalizeNotification));
+    } catch {
+      // leave empty on error
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { fetchNotifs(); }, [fetchNotifs]);
+
+  async function markAllRead() {
+    setNotifs((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    try {
+      await notificationsService.markAllRead();
+    } catch {
+      fetchNotifs();
+    }
   }
 
-  function markRead(id) {
+  async function markRead(id) {
     setNotifs((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
+      prev.map((n) => (n.id === id ? { ...n, is_read: true } : n)),
     );
+    try {
+      await notificationsService.markRead(id);
+    } catch {
+      // ignore
+    }
   }
 
   const filtered = useMemo(() => {
     let list =
-      activeFilter === "unread" ? notifs.filter((n) => !n.read) : notifs;
+      activeFilter === "unread" ? notifs.filter((n) => !n.is_read) : notifs;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter((n) => n.title.toLowerCase().includes(q));

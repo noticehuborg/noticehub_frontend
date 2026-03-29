@@ -1,14 +1,33 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import { useNotices } from "../../hooks/useNotices";
+import { useAuth } from "../../hooks/useAuth";
+import { commentsService } from "../../services/comments.service";
 import Modal from "../../components/ui/Modal";
 import { initials, timeAgo, splitFilename } from "../../utils/helpers";
-import { CATEGORY, ATTACH_ICONS } from "../../utils/noticeConstants";
+import { CATEGORY, getAttachIcon } from "../../utils/noticeConstants";
 import CountdownBadge from "../../components/dashboard/CountdownBadge";
 import CommentBubble from "../../components/dashboard/CommentBubble";
 import LinkCard from "../../components/dashboard/LinkCard";
 import FilterPills from "../../components/dashboard/FilterPills";
 import readingIllustration from "../../assets/svg/Reading a letter-pana.svg";
+
+const ROLE_MAP = {
+  student: "Student",
+  course_rep: "Course Rep",
+  lecturer: "Lecturer",
+  admin: "Admin",
+};
+function normalizeComment(c) {
+  return {
+    id: c.id,
+    body: c.body,
+    author: c.author?.full_name ?? "Unknown",
+    authorRole: ROLE_MAP[c.author?.role] ?? "",
+    date: c.created_at,
+    replies: (c.replies ?? []).map(normalizeComment),
+  };
+}
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const FILTERS = [
@@ -157,17 +176,71 @@ function StatCard({ label, value, critical = false }) {
 
 // ─── Notice preview panel ─────────────────────────────────────────────────────
 function NoticePreview({ notice, inModal = false }) {
+  const { user } = useAuth();
+  const [comments, setComments] = useState([]);
+  const [commentCount, setCommentCount] = useState(0);
   const [commentInput, setCommentInput] = useState("");
   const [replyingTo, setReplyingTo] = useState(null);
   const [replyInput, setReplyInput] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const cat = notice ? CATEGORY[notice.type] : null;
+
+  const fetchComments = useCallback(async (id) => {
+    try {
+      const { data } = await commentsService.getByNotice(id);
+      setComments((data?.data ?? []).map(normalizeComment));
+    } catch {
+      setComments([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!notice?.id) {
+      setComments([]);
+      setCommentCount(0);
+      return;
+    }
+    setCommentCount(notice.commentCount ?? 0);
+    setCommentInput("");
+    setReplyingTo(null);
+    setReplyInput("");
+    fetchComments(notice.id);
+  }, [notice?.id, fetchComments]);
+
+  async function handleCommentSubmit() {
+    if (!commentInput.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await commentsService.create(notice.id, { body: commentInput.trim() });
+      setCommentInput("");
+      setCommentCount((n) => n + 1);
+      fetchComments(notice.id);
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleReplySubmit(parentId) {
+    if (!replyInput.trim() || submitting) return;
+    setSubmitting(true);
+    try {
+      await commentsService.create(notice.id, {
+        body: replyInput.trim(),
+        parentId,
+      });
+      setReplyInput("");
+      setReplyingTo(null);
+      setCommentCount((n) => n + 1);
+      fetchComments(notice.id);
+    } catch {
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   function handleReply(id) {
     setReplyingTo(id);
-    setReplyInput("");
-  }
-  function handleReplySubmit() {
-    setReplyingTo(null);
     setReplyInput("");
   }
 
@@ -194,7 +267,6 @@ function NoticePreview({ notice, inModal = false }) {
   const body = notice.body;
   const hasAttachments = notice.attachments?.length > 0;
   const hasLinks = notice.links?.length > 0;
-  const hasComments = notice.comments?.length > 0;
   const critical = notice.dueDate ? isDueSoon(notice.dueDate) : false;
 
   const contentCls = inModal
@@ -220,9 +292,7 @@ function NoticePreview({ notice, inModal = false }) {
         <div className="flex flex-col gap-5 items-start w-full">
           {/* Category pill + date */}
           <div className="w-full flex items-center justify-between flex-wrap gap-2">
-            <span
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm ${critical ? "bg-error-2 text-error-7" : "bg-blue-1 text-primary"}`}
-            >
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs md:text-sm bg-blue-1 text-primary">
               <Icon icon={cat.icon} className="w-3.5 h-3.5" />
               {cat.label}
             </span>
@@ -281,7 +351,7 @@ function NoticePreview({ notice, inModal = false }) {
                   icon="iconamoon:comment"
                   className="w-3.5 h-3.5 md:w-4 md:h-4"
                 />
-                {notice.commentCount ?? 0}
+                {commentCount}
               </span>
             </div>
           </div>
@@ -305,13 +375,13 @@ function NoticePreview({ notice, inModal = false }) {
             </p>
             <div className="flex flex-row flex-wrap gap-2">
               {notice.attachments.map((att) => {
-                const ai = ATTACH_ICONS[att.type] || {
-                  icon: "mdi:file-document-outline",
-                };
+                const ai = getAttachIcon(att.type);
                 return (
                   <a
                     key={att.id}
-                    href="#"
+                    href={att.url || "#"}
+                    target="_blank"
+                    rel="noreferrer"
                     className="relative w-full md:w-[250px] h-14 pl-2 py-2 bg-zinc-100 rounded-[10px] shadow-[0px_1px_2px_0px_rgba(10,13,18,0.05)] border border-neutral-gray-3 flex justify-between items-center gap-1.5 hover:bg-neutral-gray-3 transition-colors group"
                   >
                     <div className="flex items-center gap-1.5 w-full">
@@ -370,12 +440,12 @@ function NoticePreview({ notice, inModal = false }) {
               className="w-3.5 h-3.5 md:w-4 md:h-4"
             />
             <p className="text-xs md:text-sm font-medium">
-              Comments ({notice.commentCount ?? 0})
+              Comments ({commentCount})
             </p>
           </div>
-          {hasComments ? (
+          {comments.length > 0 ? (
             <div className="flex flex-col gap-4">
-              {notice.comments.map((c) => (
+              {comments.map((c) => (
                 <CommentBubble
                   key={c.id}
                   comment={c}
@@ -400,17 +470,22 @@ function NoticePreview({ notice, inModal = false }) {
         className={`shrink-0 flex items-center gap-2 border-t border-neutral-gray-3 ${inModal ? "px-5 py-3" : "px-8 py-4"}`}
       >
         <div className="w-7 h-7 rounded-full bg-blue-1 flex items-center justify-center text-xs font-semibold text-primary shrink-0">
-          Y
+          {initials(user?.name ?? "?")}
         </div>
         <div className="flex-1 flex items-center gap-2 px-3.5 py-2 rounded-full outline outline-1 outline-neutral-gray-4 focus-within:outline-primary transition-colors">
           <input
             value={commentInput}
             onChange={(e) => setCommentInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && commentInput.trim())
+                handleCommentSubmit();
+            }}
             placeholder="Add a comment…"
             className="flex-1 bg-transparent text-xs text-neutral-gray-9 placeholder:text-neutral-gray-5 outline-none min-w-0"
           />
           <button
-            disabled={!commentInput.trim()}
+            onClick={handleCommentSubmit}
+            disabled={!commentInput.trim() || submitting}
             className="shrink-0 disabled:opacity-40"
           >
             <Icon icon="mdi:send" className="w-4 h-4 text-primary" />
@@ -457,7 +532,9 @@ function ViewFilterDropdown({ value, onChange }) {
           icon="mdi:calendar-blank-outline"
           className="w-4 h-4 lg:w-5 lg:h-5"
         />
-        <span className="text-[13px] lg:text-sm whitespace-nowrap">{activeLabel}</span>
+        <span className="text-[13px] lg:text-sm whitespace-nowrap">
+          {activeLabel}
+        </span>
         <Icon
           icon={open ? "mdi:chevron-up" : "mdi:chevron-down"}
           className="w-3 h-3 lg:w-3.5 lg:h-3.5"
@@ -595,7 +672,11 @@ export default function DeadlinesPage() {
           )}
 
           {/* Filter pills */}
-          <FilterPills filters={FILTERS} active={activeFilter} onChange={setActiveFilter} />
+          <FilterPills
+            filters={FILTERS}
+            active={activeFilter}
+            onChange={setActiveFilter}
+          />
         </div>
 
         {/* Search + view toggle — desktop */}

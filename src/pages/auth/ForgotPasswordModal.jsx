@@ -3,20 +3,47 @@ import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import { useModal, MODAL } from "../../context/ModalContext";
+import { useToast } from "../../context/ToastContext";
+import { authService } from "../../services/auth.service";
+import { getApiError, isGeneralError } from "../../utils/apiError";
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function ForgotPasswordModal() {
   const { closeModal, openModal } = useModal();
+  const { addToast } = useToast();
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
-    if (!email) return;
+    setEmailError("");
+
+    if (!email.trim()) {
+      setEmailError("Email is required.");
+      return;
+    }
+    if (!EMAIL_RE.test(email.trim())) {
+      setEmailError("Enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await authService.requestPasswordReset(email.trim());
       setLoading(false);
-      openModal(MODAL.CONFIRMATION, { email });
-    }, 800);
+      openModal(MODAL.CONFIRMATION, { email: email.trim() });
+    } catch (err) {
+      setLoading(false);
+      if (isGeneralError(err)) {
+        addToast(getApiError(err));
+      } else {
+        // Backend always returns 200 for this endpoint to prevent email enumeration,
+        // so any 4xx here is unexpected — show a toast.
+        addToast(getApiError(err));
+      }
+    }
   }
 
   return (
@@ -45,7 +72,11 @@ export default function ForgotPasswordModal() {
             type="email"
             placeholder="Enter your email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              setEmail(e.target.value);
+              setEmailError("");
+            }}
+            error={emailError}
             autoComplete="email"
           />
           <div className="flex flex-col gap-3">

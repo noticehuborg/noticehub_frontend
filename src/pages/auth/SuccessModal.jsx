@@ -8,9 +8,9 @@ export default function SuccessModal() {
   const navigate = useNavigate()
   const { closeModal } = useModal()
 
-  function handleDashboard() {
+  function handleLogin() {
     closeModal()
-    navigate('/dashboard/feed')
+    navigate('/login')
   }
 
   return (
@@ -32,9 +32,9 @@ export default function SuccessModal() {
           variant="primary"
           size="sm"
           className="text-[15px] xsm:text-base! py-2.5!"
-          onClick={handleDashboard}
+          onClick={handleLogin}
         >
-          Go to my dashboard
+          Go to login
           <Icon icon="mdi:arrow-right" width={18} />
         </Button>
       </div>

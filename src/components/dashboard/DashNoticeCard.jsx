@@ -30,7 +30,7 @@ export default function DashNoticeCard({ notice, isSelected, onClick }) {
           <Icon icon={cat.icon} className="w-3.5 h-3.5 lg:w-4 lg:h-4 shrink-0" />
           {cat.label}
         </span>
-        <div className="flex justify-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <span className="flex items-center gap-1 lg:gap-1.5 text-xs lg:text-sm text-neutral-gray-6">
             {recent && <Icon icon="mdi:clock-outline" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />}
             {timeAgo(notice.date)}
@@ -65,9 +65,17 @@ export default function DashNoticeCard({ notice, isSelected, onClick }) {
           <span className="w-[3px] h-[3px] lg:w-1 lg:h-1 rounded-full bg-stone-300 shrink-0" />
           <span className="text-xs text-neutral-gray-6">{notice.authorRole}</span>
         </div>
-        <div className="flex items-center gap-1 text-xs lg:text-sm text-neutral-gray-6">
-          <Icon icon="iconamoon:comment" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-          <span>{notice.commentCount ?? 0}</span>
+        <div className="flex items-center gap-2 text-xs lg:text-sm text-neutral-gray-6">
+          {notice.editedAt && (
+            <span className="flex items-center gap-0.5 text-neutral-gray-5 italic text-[10px] lg:text-xs">
+              <Icon icon="mdi:pencil-outline" className="w-3 h-3" />
+              Edited
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <Icon icon="iconamoon:comment" className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+            {notice.commentCount ?? 0}
+          </span>
         </div>
       </div>
     </button>

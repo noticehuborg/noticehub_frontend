@@ -113,7 +113,7 @@ export default function HomePage() {
           <img
             src={LinesVectorBg}
             alt="Background pattern"
-            className="opacity-60 object-center object-cover w-200 h-full md:w-500"
+            className="opacity-85 object-center object-cover w-200 h-full md:w-500"
           />
         </div>
         <div className="relative w-full mt-24 md:mt-26 lg:mt-30  pb-28 inline-flex flex-col justify-center items-center gap-16 md:gap-24">
@@ -137,7 +137,7 @@ export default function HomePage() {
               </div>
             </motion.div>
             <motion.div
-              className="inline-flex flex-col sm:flex-row items-center gap-4 md:gap-6"
+              className="inline-flex flex-col sm:flex-row items-center gap-4 md:gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{

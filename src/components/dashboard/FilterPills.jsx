@@ -6,10 +6,10 @@ export default function FilterPills({ filters, active, onChange, className = "" 
         <button
           key={f.value}
           onClick={() => onChange(f.value)}
-          className={`cursor-pointer px-2.5 lg:px-5 py-1.5 lg:py-2 rounded-full text-xs lg:text-sm font-medium transition-colors
+          className={`cursor-pointer px-2.5 lg:px-4 py-1.5 lg:py-1.75  rounded-full text-xs lg:text-sm font-medium transition-colors
             ${active === f.value
-              ? "bg-primary text-blue-1 outline-1 outline-primary"
-              : "outline-1 outline-neutral-gray-6 text-neutral-gray-6 hover:bg-neutral-gray-2"
+              ? "bg-primary text-blue-1 border border-primary"
+              : "border border-neutral-gray-6 text-neutral-gray-6 hover:bg-neutral-gray-2"
             }`}
         >
           {f.label}

@@ -303,7 +303,7 @@
 
   /* --- Inputs --- */
   .input-base {
-    @apply w-full px-3.5 py-[12px] rounded-xl  bg-zinc-100
+    @apply w-full px-3.5 py-3 rounded-xl  bg-zinc-100
          text-sm lg:text-[15px] text-secondary placeholder:text-neutral-gray-6 focus:outline-none border-2 border-zinc-100  focus:border-primary/30
          transition-all duration-200;
   }

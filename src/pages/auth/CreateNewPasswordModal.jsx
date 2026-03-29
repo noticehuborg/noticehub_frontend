@@ -3,9 +3,13 @@ import Modal from "../../components/ui/Modal";
 import Input from "../../components/ui/Input";
 import Button from "../../components/ui/Button";
 import { useModal, MODAL } from "../../context/ModalContext";
+import { useToast } from "../../context/ToastContext";
+import { authService } from "../../services/auth.service";
+import { getApiError, isGeneralError } from "../../utils/apiError";
 
 export default function CreateNewPasswordModal() {
-  const { closeModal, openModal } = useModal();
+  const { closeModal, openModal, modalData } = useModal();
+  const { addToast } = useToast();
   const [form, setForm] = useState({ password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -15,21 +19,38 @@ export default function CreateNewPasswordModal() {
     setErrors((e2) => ({ ...e2, [e.target.name]: "" }));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
+
+    // Token must be present (passed via modalData from the reset-password route)
+    if (!modalData?.token) {
+      setErrors({ general: "This link is invalid or has expired. Please request a new one." });
+      return;
+    }
+
     const errs = {};
-    if (form.password.length < 8) errs.password = "At least 8 characters.";
-    if (form.password !== form.confirm)
-      errs.confirm = "Passwords do not match.";
+    if (form.password.length < 8) errs.password = "Password must be at least 8 characters.";
+    if (form.password !== form.confirm) errs.confirm = "Passwords do not match.";
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
+    try {
+      await authService.resetPassword({ token: modalData.token, newPassword: form.password });
       setLoading(false);
       openModal(MODAL.LOGIN);
-    }, 800);
+    } catch (err) {
+      setLoading(false);
+      if (isGeneralError(err)) {
+        addToast(getApiError(err));
+      } else {
+        // 400 "Token is invalid or has expired" → show inline
+        const msg = err?.response?.data?.message ?? "Something went wrong. Please try again.";
+        setErrors({ general: msg });
+      }
+    }
   }
 
   return (
@@ -52,6 +73,9 @@ export default function CreateNewPasswordModal() {
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          {errors.general && (
+            <p className="text-sm text-error-8 text-center">{errors.general}</p>
+          )}
           <Input
             label="New Password"
             id="new-password"

@@ -26,7 +26,7 @@ export default function Input({
           id={id}
           type={inputType}
           placeholder={placeholder}
-          className={`input-base ${error ? "ring-1 ring-error-7" : ""} ${isPassword ? "pr-11" : ""} ${className}`}
+          className={`input-base ${error ? "border border-error-8" : ""} ${isPassword ? "pr-11" : ""} ${className}`}
           {...props}
         />
         {isPassword && (
@@ -44,7 +44,7 @@ export default function Input({
           </button>
         )}
       </div>
-      {error && <p className="text-xs md:text-sm text-error-7">{error}</p>}
+      {error && <p className="text-xs md:text-[13px] text-error-8">{error}</p>}
     </div>
   );
 }

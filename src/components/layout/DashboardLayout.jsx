@@ -30,7 +30,7 @@ export default function DashboardLayout() {
 
   return (
     <div className="relative h-screen flex flex-col bg-section-bg overflow-hidden">
-      <Header variant="dashboard" onSidebarToggle={toggleMobileSidebar} />
+      <Header variant="dashboard" onSidebarToggle={toggleMobileSidebar} onLogoutRequest={handleLogoutRequest} />
 
       <div className="absolute w-full opacity-70">
         <img
