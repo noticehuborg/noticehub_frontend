@@ -91,17 +91,27 @@ export default function ContactPage() {
 
               {submitted && (
                 <div className="flex items-start gap-3 px-5 py-4 bg-success-1 rounded-2xl outline outline-1 outline-success-4">
-                  <Icon icon="mdi:check-circle-outline" className="w-5 h-5 text-success-7 shrink-0 mt-0.5" />
+                  <Icon
+                    icon="mdi:check-circle-outline"
+                    className="w-5 h-5 text-success-7 shrink-0 mt-0.5"
+                  />
                   <div>
-                    <p className="text-sm font-semibold text-success-8">Message sent!</p>
-                    <p className="text-sm text-success-7 mt-0.5">We've received your message and will get back to you soon.</p>
+                    <p className="text-sm font-semibold text-success-8">
+                      Message sent!
+                    </p>
+                    <p className="text-sm text-success-7 mt-0.5">
+                      We've received your message and will get back to you soon.
+                    </p>
                   </div>
                 </div>
               )}
 
               {submitError && (
                 <div className="flex items-center gap-2 px-5 py-4 bg-error-1 rounded-2xl outline outline-1 outline-error-3">
-                  <Icon icon="mdi:alert-circle-outline" className="w-5 h-5 text-error-7 shrink-0" />
+                  <Icon
+                    icon="mdi:alert-circle-outline"
+                    className="w-5 h-5 text-error-7 shrink-0"
+                  />
                   <p className="text-sm text-error-8">{submitError}</p>
                 </div>
               )}
@@ -220,9 +230,18 @@ export default function ContactPage() {
                 />
 
                 <div>
-                  <Button type="submit" variant="primary" size="md" loading={submitting} disabled={submitting}>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="sm"
+                    className=" px-4! py-2.5!"
+                    loading={submitting}
+                    disabled={submitting}
+                  >
                     {submitting ? "Sending..." : "Send message"}
-                    {!submitting && <Icon icon="tabler:arrow-right" width={20} />}
+                    {!submitting && (
+                      <Icon icon="tabler:arrow-right" width={18} />
+                    )}
                   </Button>
                 </div>
               </form>
