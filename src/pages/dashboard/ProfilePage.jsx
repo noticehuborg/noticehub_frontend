@@ -365,10 +365,17 @@ function PersonalInfoTab({ user, isLecturer, onGoToLevel, updateUser }) {
 
 // ─── Security Tab ──────────────────────────────────────────────────────────────
 function SecurityTab() {
+  const { user, logout } = useAuth();
   const [form, setForm] = useState({ current: "", newPass: "", confirm: "" });
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Delete account state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   function set(key) {
     return (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -395,6 +402,22 @@ function SecurityTab() {
       setError(err?.response?.data?.message ?? "Failed to update password.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteError("");
+    if (confirmEmail.trim().toLowerCase() !== (user?.email ?? "").toLowerCase()) {
+      setDeleteError("Email doesn't match. Please type your exact email address.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      await authService.deleteAccount();
+      await logout();
+    } catch (err) {
+      setDeleteError(err?.response?.data?.message ?? "Failed to delete account. Please try again.");
+      setDeleting(false);
     }
   }
 
@@ -473,6 +496,70 @@ function SecurityTab() {
             {loading ? "Saving..." : "Update Password"}
           </Button>
         </form>
+      </div>
+
+      {/* ── Danger Zone ── */}
+      <div className="rounded-2xl border border-error-3 bg-error-1 p-5 lg:p-6 flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-error-3 flex items-center justify-center shrink-0">
+            <Icon icon="mdi:alert-outline" className="w-5 h-5 text-error-8" />
+          </div>
+          <div>
+            <h3 className="text-base font-semibold text-error-8">Danger Zone</h3>
+            <p className="text-sm text-error-7 mt-0.5 leading-5">
+              Permanently delete your account and all associated data. This action cannot be undone.
+            </p>
+          </div>
+        </div>
+
+        {!showDeleteConfirm ? (
+          <button
+            type="button"
+            onClick={() => { setShowDeleteConfirm(true); setDeleteError(""); setConfirmEmail(""); }}
+            className="cursor-pointer self-start flex items-center gap-2 px-4 py-2.5 rounded-xl border border-error-4 bg-white text-error-7 text-sm font-medium hover:bg-error-2 transition-colors"
+          >
+            <Icon icon="mdi:delete-outline" className="w-4 h-4" />
+            Delete Account
+          </button>
+        ) : (
+          <div className="flex flex-col gap-3 pt-1 border-t border-error-3">
+            <p className="text-sm text-error-8 font-medium">
+              Type your email address to confirm:
+              <span className="font-bold"> {user?.email}</span>
+            </p>
+            <input
+              type="email"
+              value={confirmEmail}
+              onChange={(e) => { setConfirmEmail(e.target.value); setDeleteError(""); }}
+              placeholder={user?.email}
+              className="input-base border-error-3 focus:border-error-6 focus:ring-error-2 text-sm max-w-sm"
+            />
+            {deleteError && (
+              <p className="text-xs text-error-8 flex items-center gap-1.5">
+                <Icon icon="mdi:alert-circle-outline" className="w-3.5 h-3.5 shrink-0" />
+                {deleteError}
+              </p>
+            )}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={handleDeleteAccount}
+                disabled={deleting || !confirmEmail}
+                className="cursor-pointer flex items-center gap-2 px-4 py-2.5 rounded-xl bg-error-7 text-white text-sm font-medium hover:bg-error-8 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                <Icon icon={deleting ? "mdi:loading" : "mdi:delete"} className={`w-4 h-4 ${deleting ? "animate-spin" : ""}`} />
+                {deleting ? "Deleting..." : "Yes, delete my account"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowDeleteConfirm(false); setConfirmEmail(""); setDeleteError(""); }}
+                className="cursor-pointer text-sm text-error-7 hover:text-error-8 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

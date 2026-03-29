@@ -67,4 +67,7 @@ export const authService = {
 
   requestLevelCorrection: ({ requested_level, reason }) =>
     api.post('/users/me/level-correction', { requested_level, reason }),
+
+  deleteAccount: () =>
+    api.delete('/users/me'),
 }
