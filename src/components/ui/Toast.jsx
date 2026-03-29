@@ -6,25 +6,25 @@ const VARIANTS = {
     icon: "mdi:alert-circle",
     wrap: "bg-error-2 border-error-4",
     iconCls: "text-error-8",
-    textCls: "text-error-5",
+    textCls: "text-error-7",
   },
   success: {
     icon: "ep:success-filled",
     wrap: "bg-success-1 border-success-2",
     iconCls: "text-success-8",
-    textCls: "text-success-5",
+    textCls: "text-success-7",
   },
   warning: {
     icon: "mdi:alert",
     wrap: "bg-warning-2 border-warning-4",
     iconCls: "text-warning-8",
-    textCls: "text-warning-5",
+    textCls: "text-warning-7",
   },
   info: {
     icon: "mdi:information",
     wrap: "bg-blue-1 border-blue-2",
-    iconCls: "text-blue-7",
-    textCls: "text-blue-5",
+    iconCls: "text-blue-8",
+    textCls: "text-blue-7",
   },
 };
 

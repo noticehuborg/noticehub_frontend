@@ -226,7 +226,7 @@ export default function LoginModal() {
                   size="md"
                   loading={resending}
                   onClick={handleResendOtp}
-                  className="flex-1 text-[15px] xsm:text-base! py-2.5! border-warning-5 text-warning-7 hover:bg-warning-1!"
+                  className="flex-1 text-[15px] xsm:text-base! py-2.5! hover:border-warning-6 border-warning-5 text-warning-7 hover:bg-warning-1!"
                 >
                   <Icon icon="mdi:email-sync-outline" width={18} />
                   {resending ? "Sending..." : "Resend OTP"}
