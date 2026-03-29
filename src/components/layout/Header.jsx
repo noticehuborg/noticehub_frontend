@@ -122,7 +122,7 @@ function NotifDropdown({ notifs, onMarkAllRead, navigate, onClose }) {
 }
 
 // ─── Profile dropdown ──────────────────────────────────────────────────────────
-function ProfileDropdown({ user, navigate, onClose, onLogoutRequest }) {
+function ProfileDropdown({ user, navigate, onClose, onLogoutRequest, variant = "authenticated" }) {
   const initials =
     user?.name
       ?.split(" ")
@@ -199,29 +199,34 @@ function ProfileDropdown({ user, navigate, onClose, onLogoutRequest }) {
           <Icon icon="fluent:person-20-regular" className="w-4 h-4 shrink-0" />
           View Profile
         </button>
-        <button
-          onClick={() => {
-            navigate("/dashboard/feed");
-            onClose();
-          }}
-          className="cursor-pointer flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-neutral-gray-7 hover:bg-section-bg hover:text-neutral-gray-9 transition-colors text-left"
-        >
-          <Icon
-            icon="mdi:view-dashboard-outline"
-            className="w-4 h-4 shrink-0"
-          />
-          Dashboard
-        </button>
-        <button
-          onClick={() => {
-            navigate("/");
-            onClose();
-          }}
-          className="xsm:hidden cursor-pointer flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-neutral-gray-7 hover:bg-section-bg hover:text-neutral-gray-9 transition-colors text-left"
-        >
-          <Icon icon="iconoir:internet" className="w-4 h-4 shrink-0" />
-          Go to Website
-        </button>
+
+        {/* Authenticated header: show Dashboard link */}
+        {variant === "authenticated" && (
+          <button
+            onClick={() => {
+              navigate("/dashboard");
+              onClose();
+            }}
+            className="cursor-pointer flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-neutral-gray-7 hover:bg-section-bg hover:text-neutral-gray-9 transition-colors text-left"
+          >
+            <Icon icon="mdi:view-dashboard-outline" className="w-4 h-4 shrink-0" />
+            Dashboard
+          </button>
+        )}
+
+        {/* Dashboard header: show Go to Website link */}
+        {variant === "dashboard" && (
+          <button
+            onClick={() => {
+              navigate("/");
+              onClose();
+            }}
+            className="cursor-pointer flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm text-neutral-gray-7 hover:bg-section-bg hover:text-neutral-gray-9 transition-colors text-left"
+          >
+            <Icon icon="iconoir:internet" className="w-4 h-4 shrink-0" />
+            Go to Website
+          </button>
+        )}
         <div className="my-1 border-t border-neutral-gray-2" />
         <button
           onClick={handleLogout}
@@ -435,6 +440,7 @@ function AuthenticatedHeader({ onMobileToggle, mobileOpen, onLogoutRequest }) {
               navigate={navigate}
               onClose={() => setProfileOpen(false)}
               onLogoutRequest={onLogoutRequest}
+              variant="authenticated"
             />
           )}
         </div>
@@ -570,6 +576,7 @@ function DashboardHeader({ onSidebarToggle, onLogoutRequest }) {
                 navigate={navigate}
                 onClose={() => setProfileOpen(false)}
                 onLogoutRequest={onLogoutRequest}
+                variant="dashboard"
               />
             )}
           </div>
