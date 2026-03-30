@@ -5,7 +5,7 @@ import { CATEGORY, getAttachIcon } from "../../utils/noticeConstants";
 import CountdownBadge from "./CountdownBadge";
 import CommentBubble from "./CommentBubble";
 import LinkCard from "./LinkCard";
-import readingIllustration from "../../assets/svg/Reading a letter-pana.svg";
+import readingIllustration from "/svg/Reading a letter-pana.svg";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotices } from "../../hooks/useNotices";
 import { commentsService } from "../../services/comments.service";

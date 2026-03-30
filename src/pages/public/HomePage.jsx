@@ -7,17 +7,17 @@ import SectionTitle from "../../components/common/SectionTitle";
 import Tabs from "../../components/ui/Tabs";
 import { useState } from "react";
 import { useModal, MODAL } from "../../context/ModalContext";
-import LinesVectorBg from "../../assets/svg/linesvectorbg.svg";
-import Hero1 from "../../assets/img/hero1.jpg";
-import Hero2 from "../../assets/img/hero2.jpg";
-import Problem1 from "../../assets/img/theproblem1.jpg";
-import Problem2 from "../../assets/img/theproblem2.jpg";
+import LinesVectorBg from "/svg/linesvectorbg.svg";
+import Hero1 from "/img/hero1.jpg";
+import Hero2 from "/img/hero2.jpg";
+import Problem1 from "/img/theproblem1.jpg";
+import Problem2 from "/img/theproblem2.jpg";
 import ProblemCard from "../../components/common/problemCard";
 import FeatureItem from "../../components/common/FeatureItem";
 import HowItWorksCard from "../../components/common/HowItWorksCard";
-import HowItWorksBg from "../../assets/img/howitworks.jpg";
-import ForStudentImg from "../../assets/img/forstudent.jpg";
-import CtaSection from "../../assets/img/ctasection.jpg";
+import HowItWorksBg from "/img/howitworks.jpg";
+import ForStudentImg from "/img/forstudent.jpg";
+import CtaSection from "/img/ctasection.jpg";
 
 const features = [
   {

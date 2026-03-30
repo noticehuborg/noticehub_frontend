@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import Button from "../../components/ui/Button";
-import LinesVectorBg from "../../assets/svg/linesvectorbg.svg";
-import GroupDiscussion from "../../assets/svg/group-discussion-rafiki.svg";
+import LinesVectorBg from "/svg/linesvectorbg.svg";
+import GroupDiscussion from "/svg/group-discussion-rafiki.svg";
 import Input from "../../components/ui/Input";
 import api from "../../services/api";
 

@@ -10,7 +10,7 @@ import CountdownBadge from "../../components/dashboard/CountdownBadge";
 import CommentBubble from "../../components/dashboard/CommentBubble";
 import LinkCard from "../../components/dashboard/LinkCard";
 import FilterPills from "../../components/dashboard/FilterPills";
-import readingIllustration from "../../assets/svg/Reading a letter-pana.svg";
+import readingIllustration from "/svg/Reading a letter-pana.svg";
 
 const ROLE_MAP = {
   student: "Student",

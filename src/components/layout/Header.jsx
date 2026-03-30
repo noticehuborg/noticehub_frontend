@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react";
 import Button from "../ui/Button";
 import { useAuth } from "../../hooks/useAuth";
 import { useModal, MODAL } from "../../context/ModalContext";
-import logoAndText from "../../assets/img/logoandtext.png";
+import logoAndText from "/img/logoandtext.png";
 import {
   notificationsService,
   normalizeNotification,

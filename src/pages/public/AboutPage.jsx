@@ -8,8 +8,8 @@ import ProblemCard from "../../components/common/problemCard";
 import FeatureItem from "../../components/common/FeatureItem";
 import TeamCard from "../../components/common/TeamCard";
 import FaqItem from "../../components/common/FaqItem";
-import LinesVectorBg from "../../assets/svg/linesvectorbg.svg";
-import CtaSection from "../../assets/img/ctasection.jpg";
+import LinesVectorBg from "/svg/linesvectorbg.svg";
+import CtaSection from "/img/ctasection.jpg";
 
 const stats = [
   { value: "94", suffix: "%", label: "Student satisfaction rate" },
@@ -117,52 +117,52 @@ const teamMembers = [
   {
     name: "Benyah King David Adom",
     roles: ["Project Manager", "UI/UX Designer"],
-    image: "../../src/assets/img/team1.jpg",
+    image: "/img/team1.jpg",
   },
   {
     name: "Fred Jeremy Kwofie",
     roles: ["UI/UX Designer"],
-    image: "../../src/assets/img/team2.jpg",
+    image: "/img/team2.jpg",
   },
   {
     name: "Nutakor Godsway Nani",
     roles: ["Frontend", "Quality Assurance"],
-    image: "../../src/assets/img/team3.jpg",
+    image: "/img/team3.jpg",
   },
   {
     name: "Charles Owusu-Nyannor",
     roles: ["Frontend Developer"],
-    image: "../../src/assets/img/team4.jpg",
+    image: "/img/team4.jpg",
   },
   {
     name: "Scheck Stephen Blessed",
     roles: ["Frontend Developer"],
-    image: "../../src/assets/img/team5.jpg",
+    image: "/img/team5.jpg",
   },
   {
     name: "Abu-Wireko Jason",
     roles: ["Frontend Developer"],
-    image: "../../src/assets/img/team6.jpg",
+    image: "/img/team6.jpg",
   },
   {
     name: "Wuni Abdulai",
     roles: ["Backend Developer"],
-    image: "../../src/assets/img/team7.jpg",
+    image: "/img/team7.jpg",
   },
   {
     name: "Mensah Boakye Godfred",
     roles: ["Backend Developer"],
-    image: "../../src/assets/img/team8.jpg",
+    image: "/img/team8.jpg",
   },
   {
     name: "Akaribo George",
     roles: ["Backend", "Quality Assurance"],
-    image: "../../src/assets/img/team9.jpg",
+    image: "/img/team9.jpg",
   },
   {
     name: "Kotey James Jnr",
     roles: ["Backend"],
-    image: "../../src/assets/img/team10.jpg",
+    image: "/img/team10.jpg",
   },
 ];
 

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Icon } from "@iconify/react";
-import LogoAndText from "../../assets/img/logoandtext.png";
+import LogoAndText from "/img/logoandtext.png";
 
 const socialLinks = [
   { icon: "mdi:facebook", label: "Facebook", href: "#" },

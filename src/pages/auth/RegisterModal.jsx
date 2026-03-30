@@ -8,7 +8,7 @@ import { useModal, MODAL } from "../../context/ModalContext";
 import { useToast } from "../../context/ToastContext";
 import { authService } from "../../services/auth.service";
 import { getApiError, getErrorStatus } from "../../utils/apiError";
-import logo from "../../assets/img/logo.png";
+import logo from "/img/logo.png";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

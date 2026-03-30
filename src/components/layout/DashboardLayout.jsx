@@ -4,7 +4,7 @@ import { Icon } from "@iconify/react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
 import Modal from "../ui/Modal";
-import LinesVectorBg from "../../assets/svg/linesvectorbg.svg";
+import LinesVectorBg from "/svg/linesvectorbg.svg";
 import { useAuth } from "../../hooks/useAuth";
 
 export default function DashboardLayout() {

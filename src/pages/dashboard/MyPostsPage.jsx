@@ -7,7 +7,7 @@ import { initials, timeAgo, isRecent, matchesDate, splitFilename } from "../../u
 import { CATEGORY, DATE_FILTERS, getAttachIcon } from "../../utils/noticeConstants";
 import CountdownBadge from "../../components/dashboard/CountdownBadge";
 import FilterPills from "../../components/dashboard/FilterPills";
-import readingIllustration from "../../assets/svg/Reading a letter-pana.svg";
+import readingIllustration from "/svg/Reading a letter-pana.svg";
 import { postsService } from "../../services/posts.service";
 import { normalizeNotice } from "../../services/notices.service";
 import { commentsService } from "../../services/comments.service";
